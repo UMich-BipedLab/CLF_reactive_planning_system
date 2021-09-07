@@ -1,0 +1,113 @@
+<!-- Author: Bruce Huang
+     Email:  bjhuang@umich.edu
+     Date:   06/2019   -->
+
+<launch>
+
+    <!-- planning node -->
+    <group ns="planning">
+            <node pkg="grove_test" type="grove_test" name="grove_test" output="screen"/>
+
+            <param name="use_sim_time" value="false" />
+
+            <!-- =============== functions ===============  -->
+            <param name="method" type="int" value="3" /> 
+
+
+            <!-- =============== mapper settings  ===============  -->
+            <param name="replannning_timeout" type="double" value="4" /> <!-- in seconds -->
+            <param name="update_time" type="double" value="0.5" /> <!-- in seconds -->
+
+
+            <!-- === dstar  ===  -->
+            <param name="dstar_max_step" type="int" value="500000" /> <!-- Dstar -->
+            <param name="dstar_unknow_cell_cost" type="int" value="50000" /> <!-- Dstar -->
+
+
+            <!-- === goal segment  ===  -->
+            <param name="direction" type="double" value="25" /> <!-- toward direction -->
+            <param name="radious" type="double" value="2" /> <!--  radious of the circle-->
+            <param name="expend_radious_amount" type="double" value="0.1" /> <!-- in meter -->
+            <param name="expend_radious_amount_bound" type="int" value="70" /> <!-- in meter -->
+            <param name="reached_goal_threshold" type="double" value="5" /> <!-- in meter -->
+            <param name="circle_resolution" type="double" value="1" /> <!--  -->
+            <param name="away_from_end_of_segment" type="double" value="1" /> <!--  -->
+            <param name="min_free" type="int" value="4" /> <!--  minimum free to become a segment-->
+            <param name="only_forward" type="bool" value="true" /> <!--  only walk forward -->
+            <param name="fov" type="double" value="70" /> <!--  fov of cosine -->
+            <param name="right_fov" type="double" value="60" /> <!-- angle of the right of cassie  -->
+
+
+            <!-- === cost of cell settings  ===  -->
+
+            <!-- = around cassie, don't update cost (meter) = -->
+            <param name="blind_horizon" type="double" value="0.5" /> 
+
+            <!-- = below this, consider as occupied (mete) = -->
+            <param name="occupied_cell" type="double" value="0.3" />   <!-- in meter -->
+
+            <!-- = value of a unknown cell  = -->
+            <param name="unknown_cell" type="int" value="-1" /> 
+
+            <!-- = re-assign a value of a unknown cell for d-star = -->
+            <param name="unknown_cell_cost" type="double" value="1e3" /> 
+
+            <!-- = re-assign a value of a occupied cell for d-star = -->
+            <param name="occupied_cell_cost" type="double" value="1e5" /> 
+            
+
+
+            <!-- === cost searching settings  ===  -->
+            <param name="searching_dim" type="int" value="40" /> <!-- in cell, scope: (x*2)^2  -->
+            <param name="expend_searching_dim_amount" type="int" value="5" /> <!-- in cell, scope: (x*2)^2  -->
+            <param name="expend_searching_dim_bound" type="int" value="10" />  <!-- how many time of expension-->
+            <param name="order" type="int" value="1" /> <!-- in cell, scope: (x*2+1)^2  -->
+
+
+            <!-- =============== topics ===============  -->
+            <param name="map_frame" type="string" value="odom" /> 
+            <param name="cassie_frame" type="string" value="/cassie/pelvis" /> 
+            <param name="costmap_topic" type="string" value="/cassie_node/cost_map" /> 
+            <param name="queue_size" type="int" value="1" /> 
+
+
+            <!-- =============== waypoints ===============  -->
+            <param name="num_waypoints" type="int" value="20" /> 
+            <param name="waypoint_index" type="int" value="5" />
+
+
+            <!-- =============== publishers ===============  -->
+            <param name="pub_free" type="bool" value="false" /> 
+            <param name="pub_occupied" type="bool" value="false" /> 
+            <param name="pub_unknown" type="bool" value="false" /> 
+            <param name="pub_all_cells" type="bool" value="false" /> 
+            
+
+
+            <!-- =============== unused parameters ===============  -->
+            <param name="fork_distance" type="double" value="0.7" /> <!--  -->
+            <param name="goal_distance" type="double" value="2" /> <!-- minimum distance -->
+            <param name="waypoint_distance" type="double" value="0.5" />
+
+            <!-- =============== goal finder ===============  -->
+            <!--
+                0: search from the smallest index
+                .
+                .
+                .
+                3: search from the largest index
+            -->
+            <param name="goal_finder" type="int" value="3" /> 
+            <param name="away_from_occupied" type="double" value="0.8" /> 
+
+
+            <!-- =============== auto select goal  ===============  -->
+            <param name="auto_goal_finder" type="bool" value="true" /> 
+            <param name="goal_finder_1" type="int" value="1" />  <!-- (+, +) -->
+            <param name="goal_finder_2" type="int" value="1" />  <!-- (-, +) -->
+            <param name="goal_finder_3" type="int" value="3" />  <!-- (-, -) -->
+            <param name="goal_finder_4" type="int" value="2" />  <!-- (+, -) -->
+            <param name="goal_finder_count_threshold" type="int" value="800" /> 
+    </group>
+</launch>
+

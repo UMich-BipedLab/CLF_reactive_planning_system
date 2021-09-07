@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# 
+ctags_file
+*.m~

@@ -1,0 +1,15 @@
+local_map:
+  # 0: no filtering
+  # 1: assign NAN with the value specified in cost_map.yaml
+  # 2: include mode1 and smooth the map
+  # 3: include mode1, mode2 and then compute slope WRT to robot pose
+  # 4: include mode1, mode2 and compute singed distance to cloeset obstalces 
+  #    <often use on flat ground>
+  # 5: include mode1, mode2 and then assign a cell as unknown if any obstacle exists
+  #    between the cell and the robot
+  mode: 5 
+  obstacle_threshold: 0.3 # cost beyond this (0.5), will be considered obstacles
+  length: 6 # length of local map, including front and back (being too small will result in too much computation time) 
+  smooth_radius: 0.1 # 0.2, 2, 0.5
+  SDF_radius: 1 # use Spiral iterator and stop when find an obstalce (signed distance field)
+  nan_percentage_in_radius: 0.8 # 0.5, 0.8, 0.7

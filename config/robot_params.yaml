@@ -1,0 +1,17 @@
+robot_params:
+  heading_angle_preintegration: 1 # preintegrate omega for heading angle
+  step_time_interval: 0.4 # this is used for heading as well (heading = omega * time)
+  default_omega: 20 # deg/s (when robot rotates in-place)
+
+  # velocity
+  # -1: no bounds at all
+  # 0: only apply vx_upper_bound and vy_upper_bound
+  # 1: ensure sqrt(vx^2+vy^2) to normalized_speed and then apply upper bounds
+  # 2: enlarge vx and vy by the factor of velocity_factor and then apply upper bounds
+  # 3: m * vy = vy_upper_bound and n *vx = vx_upperbound. k  = min(m, n) 
+  #   to scale vx,vy,omega and they apply upper bounds
+  enlarge_mode: 3
+  normalized_speed: 0.5
+  velocity_factor: 1.5
+  vx_upper_bound: 0.7 # 0.7
+  vy_upper_bound: 0.2 # 0.1

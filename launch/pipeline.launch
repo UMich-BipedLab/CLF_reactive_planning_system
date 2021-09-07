@@ -1,0 +1,35 @@
+<launch>
+  <!-- Create fake map data publisher 
+  <node name="fake_map_publisher" pkg="cassie_planning" type="fake_map_publisher" output="log">
+    <rosparam file="$(find cassie_planning)/config/fake_map.yaml" command="load" />
+    <param name="rate" value="0.5" />
+  </node>
+  -->
+
+    <!-- Create fake robot publisher -->
+  <node name="fake_robot_publisher" pkg="cassie_planning" type="fake_robot_publisher" output="log">
+    <rosparam file="$(find cassie_planning)/config/fake_robot.yaml" command="load" />
+  </node>
+
+
+  <!-- Planner -->
+  <!--
+  <include file="$(find cassie_planning)/launch/wavefield.launch" />
+  -->
+  <include file="$(find cassie_planning)/launch/FRB_test_offline.launch" />
+
+
+
+  <!-- bagfile -->
+  <node pkg="rosbag" type="play" name="player" output="log" args="-s 100 /home/brucebot/workspace/catkin/bagfiles/FRBCassie/firstfloor_0820v4.bag --topics /elevation_mapping/elevation_map"/>
+
+  <!-- Create static robot publisher 
+  <node name="fake_robot_publisher" pkg="cassie_planning" type="static_robot_publisher" output="screen">
+    <rosparam file="$(find cassie_planning)/config/fake_robot.yaml" command="load" />
+  </node>
+  -->
+
+
+
+</launch>
+

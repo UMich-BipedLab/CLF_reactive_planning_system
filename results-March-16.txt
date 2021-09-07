@@ -1,0 +1,447 @@
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[ WARN] [1615929468.919962685]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 1
+[CLFRRT] Cost: (29.3663,7.39198)
+[CLFRRT] Total cost: 36.7583
+[CLFRRT] samples / seconds: 130.672
+[CLFRRT] Number of samples: 66
+[CLFRRT] Total Spent [s]: 0.50508
+[Driver]/[updatedPlannerResults] New path too bad!
+[Driver]/[updatedPlannerresults] old cost:18.3093
+[Driver]/[updatedPlannerresults] new cost:36.7583
+[Driver]/[updatedPlannerresults] diff:18.449
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ INFO] [1615929469.283307082]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929469.299972412]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929469.300007054]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929469.919969873]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929470.286593964]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929470.303272172]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929470.303302713]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929470.923302126]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929471.286629843]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929471.303295520]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929471.303326651]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929471.923311891]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929472.289963737]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929472.303300908]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929472.303329753]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929472.926594629]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929473.293309763]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929473.306638758]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929473.306671373]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929473.716633877]: [Driver]/[prepareInfowithMPC] Walking in-place: Old path timeout!
+[ WARN] [1615929473.719922036]: [Driver]/[prepareInfowithMPC] Walking in-place: No path to go!
+[ INFO] [1615929474.296599182]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929474.306634558]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929474.309955482]: [Driver]/[prepareInfowithMPC] planner has path to use: 0
+[ WARN] [1615929474.719973730]: [Driver]/[prepareInfowithMPC] Walking in-place: No path to go!
+[ INFO] [1615929475.296605170]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929475.309929686]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929475.309962752]: [Driver]/[prepareInfowithMPC] planner has path to use: 0
+[ WARN] [1615929475.723297448]: [Driver]/[prepareInfowithMPC] Walking in-place: No path to go!
+[ INFO] [1615929476.299964641]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929476.309963993]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929476.309988391]: [Driver]/[prepareInfowithMPC] planner has path to use: 0
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[ WARN] [1615929476.726632192]: [Driver]/[prepareInfowithMPC] Walking in-place: No path to go!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 1
+[CLFRRT] Cost: (12.3062,5.43404)
+[CLFRRT] Total cost: 17.7402
+[CLFRRT] samples / seconds: 126.773
+[CLFRRT] Number of samples: 64
+[CLFRRT] Total Spent [s]: 0.504837
+[Driver]/[updatedPlannerResults] New path accepted!
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[Driver]/[prepareInfowithMPC] Got a new path!
+[ WARN] [1615929476.973305361]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929477.303288861]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929477.313325673]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929477.313380579]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929477.973301006]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929478.303294422]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929478.316594103]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929478.316626700]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929478.976632585]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929479.306593486]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929479.316594710]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929479.319966324]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929479.979958748]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929480.306653864]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929480.316645044]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929480.323306002]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929480.983302235]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929481.309926955]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929481.319926272]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929481.326647212]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929481.986608290]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929482.309936825]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929482.319936859]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929482.329940408]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929482.986630504]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929483.309954194]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929483.319962121]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929483.329970401]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929483.989969116]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929484.313275594]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929484.323269968]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929484.333300253]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929484.993265155]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929485.316628450]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929485.323287934]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929485.336630204]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929485.993271912]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929486.319927721]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929486.326588849]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929486.339928786]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929486.996633894]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929487.323294258]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929487.326590820]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929487.339932188]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[ WARN] [1615929487.999925874]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 1
+[CLFRRT] Cost: (12.9387,5.49987)
+[CLFRRT] Total cost: 18.4386
+[CLFRRT] samples / seconds: 133.773
+[CLFRRT] Number of samples: 67
+[CLFRRT] Total Spent [s]: 0.500847
+[Driver]/[updatedPlannerResults] New path accepted!
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[Driver]/[prepareInfowithMPC] Got a new path!
+[ INFO] [1615929488.326630093]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929488.326662018]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929488.343300688]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929488.999969116]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Improving existing path! Timeout in: 19.1511
+[ INFO] [1615929489.329963208]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929489.329999688]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929489.346600954]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 1
+[CLFRRT] Cost: (12.9387,5.49987)
+[CLFRRT] Total cost: 18.4386
+[CLFRRT] samples / seconds: 92.8462
+[CLFRRT] Number of samples: 93
+[CLFRRT] Total Spent [s]: 1.00166
+[Driver]/[updatedPlannerResults] New path accepted!
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[Driver]/[prepareInfowithMPC] Got a new path!
+[ WARN] [1615929490.003257118]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929490.329968066]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929490.330002357]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929490.346628312]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929491.003269483]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929491.329967059]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929491.333223894]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929491.349927717]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929492.006607662]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929492.333275230]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929492.333309388]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929492.349959888]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929493.006630091]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929493.336621912]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929493.336652063]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929493.349964952]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929494.006643789]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929494.339922101]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929494.339956983]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929494.353301221]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929495.009960235]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929495.339927420]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929495.339961950]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929495.356627643]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929496.009969189]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[ INFO] [1615929496.339960455]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929496.339989309]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929496.356626685]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (8.98847e+307,8.98847e+307)
+[CLFRRT] Total cost: 1.79769e+308
+[CLFRRT] samples / seconds: 183.323
+[CLFRRT] Number of samples: 92
+[CLFRRT] Total Spent [s]: 0.501845
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ WARN] [1615929497.013266826]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929497.339968386]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929497.340005734]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929497.356636543]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Improving existing path! Timeout in: 11.6652
+[ WARN] [1615929498.016592955]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929498.343259652]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929498.343296241]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929498.359924922]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (10.8843,6.73661)
+[CLFRRT] Total cost: 17.6209
+[CLFRRT] samples / seconds: 123.537
+[CLFRRT] Number of samples: 126
+[CLFRRT] Total Spent [s]: 1.01994
+[CLFRRT] ====== Improved Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (10.8843,6.73661)
+[CLFRRT] Total cost: 17.6209
+[CLFRRT] samples / seconds: 123.537
+[CLFRRT] Number of samples: 126
+[CLFRRT] Total Spent [s]: 1.01994
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ WARN] [1615929499.016629422]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929499.343302305]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929499.343335990]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929499.359955236]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Improving existing path! Timeout in: 10.033
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (10.8843,6.73661)
+[CLFRRT] Total cost: 17.6209
+[CLFRRT] samples / seconds: 99.1499
+[CLFRRT] Number of samples: 151
+[CLFRRT] Total Spent [s]: 1.52295
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ WARN] [1615929500.019926526]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929500.346597596]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929500.346635288]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929500.359965022]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Improving existing path! Timeout in: 8.88896
+[ WARN] [1615929501.019936477]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (10.8843,6.73661)
+[CLFRRT] Total cost: 17.6209
+[CLFRRT] samples / seconds: 84.4491
+[CLFRRT] Number of samples: 171
+[CLFRRT] Total Spent [s]: 2.02489
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ INFO] [1615929501.346621799]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929501.346652830]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929501.363303948]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Improving existing path! Timeout in: 7.64199
+[ WARN] [1615929502.019959018]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929502.346628850]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929502.346663595]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929502.366615460]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (10.8843,6.73661)
+[CLFRRT] Total cost: 17.6209
+[CLFRRT] samples / seconds: 74.5512
+[CLFRRT] Number of samples: 189
+[CLFRRT] Total Spent [s]: 2.53517
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ WARN] [1615929503.023267608]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929503.349952863]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929503.349982477]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929503.369924416]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929504.026590935]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929504.353263915]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929504.353293970]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929504.373262017]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[ WARN] [1615929505.026626985]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 0
+[CLFRRT] Cost: (8.98847e+307,8.98847e+307)
+[CLFRRT] Total cost: 1.79769e+308
+[CLFRRT] samples / seconds: 172.513
+[CLFRRT] Number of samples: 88
+[CLFRRT] Total Spent [s]: 0.510107
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[ INFO] [1615929505.353310391]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929505.353341020]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929505.376618394]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929506.029937997]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929506.356640103]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929506.356670663]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929506.376631673]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929507.033319431]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929507.359942726]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929507.359978629]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929507.379926696]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929508.036616230]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929508.359966513]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929508.360002331]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929508.379969408]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929509.039961569]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929509.363284773]: [Driver]/[prepareInfowithMPC] planner updated: 1
+[ INFO] [1615929509.363312943]: [Driver]/[prepareInfowithMPC] planner found path: 0
+[ INFO] [1615929509.383256851]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929509.523309597]: [Driver]/[prepareInfowithMPC] Walking in-place: Old path timeout!
+[ WARN] [1615929509.526633253]: [Driver]/[prepareInfowithMPC] Walking in-place: No path to go!
+
+[Driver] ============================== driveRobot ==============================
+[Driver]/[driveRobot] updateRobotPose
+[Driver]/[driveRobot] updateGlobalMap()
+[Driver]/[updateGlobalMap] No new map: using the existing map
+[Driver]/[driveRobot] Update the start pose in CLFRRTStarPlanner
+[Driver]/[driveRobot] updateLocalMap()
+[Driver]/[driveRobot] decideGoalForPlanner()
+[Driver]/[driveRobot] Running CLFRRT...
+[Driver]/[planPathFromRRT] Plannning a new path!
+[CLFRRT] ====== Original Results ======
+[CLFRRT] Has found a path? 1
+[CLFRRT] Cost: (27.5699,8.96231)
+[CLFRRT] Total cost: 36.5323
+[CLFRRT] samples / seconds: 144.172
+[CLFRRT] Number of samples: 74
+[CLFRRT] Total Spent [s]: 0.513277
+[Driver]/[updatedPlannerResults] New path accepted!
+[Driver]/[driveRobot] Published all
+Press [Enter] key to continue.
+[Driver]/[prepareInfowithMPC] Got a new path!
+[ WARN] [1615929510.313299790]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929510.366629800]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929510.366671375]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929510.383265992]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929511.316663411]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929511.366626999]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929511.369952359]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929511.383293495]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929512.319937526]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929512.369927016]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929512.369963129]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929512.386591431]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929513.319958154]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929513.369956442]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929513.369984618]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929513.386624135]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929514.323290728]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929514.373271249]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929514.373305851]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929514.386635494]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929515.326588348]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929515.373300364]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929515.373329415]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929515.389958880]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929516.326601336]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929516.376623558]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929516.376651107]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929516.389966212]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929517.329929579]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929517.379956809]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929517.379988923]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929517.393271888]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929518.329962300]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929518.383256477]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929518.383285099]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929518.396592686]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929519.333259771]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929519.386625388]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929519.386653530]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929519.399927227]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929520.333273569]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929520.386625008]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929520.386653765]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929520.403295370]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929521.333286268]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929521.389949975]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929521.389980630]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929521.403298086]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+[ WARN] [1615929522.333299911]: [Driver]/[prepareInfowithMPC] No new path yet, using old path!
+[ INFO] [1615929522.393263818]: [Driver]/[prepareInfowithMPC] planner updated: 0
+[ INFO] [1615929522.393293117]: [Driver]/[prepareInfowithMPC] planner found path: 1
+[ INFO] [1615929522.403299237]: [Driver]/[prepareInfowithMPC] planner has path to use: 1
+^C[test_pipeline-1] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+done
+

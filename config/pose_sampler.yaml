@@ -1,0 +1,16 @@
+pose_sampler_params:
+  # 0: normal (random sample if not sample the goal)
+  # 1: If sample the goal, select the goal
+  #    If not, use front_bias to sample in front (front_angle) of the current robot pose
+  #    (use robot pose as front direction)
+  # 2: If sample the goal, select the goal
+  #    If not, use front_bias to sample in front (front_angle) of the current
+  #    robot position and the goal position
+  #    (use the conneting line of robot position and goal position to decide front
+  #    direction)
+  # note: the different between #1 and #2 is the way of deciding front direction
+  sampling_mode: 2
+  goal_bias: 0.5
+  front_bias: 1
+  front_angle: 45 # in deg (one-side only)
+  distance_threshold: 0.2 # sample away from obstcles

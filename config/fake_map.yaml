@@ -1,0 +1,24 @@
+fake_map:
+  # 0, 1: one hump testing <fix position>
+  # 2, 3: valley testing <fix position>
+  # 4, 5: random valley
+  # 6, 7:
+
+  #### over 100: indoor/corridor
+  ## 10x: corridor
+  # 100, 101: simple corridor scene
+  # 102, 103: slightly complex corridor scene
+  
+  ## 11x: cluttered lab
+  # 110, 111: simple clutter scene 
+  # 112, 113: simple clutter scene 
+
+  ## 12x: rectangular box  
+  # 120, 121: simple clutter scene 
+
+
+  ### over 900: test corner cases
+  # 900, 901: vertical 
+
+  scene: 113 # odd: clean map, even: noisy map 
+    # obstacle_threshold: 0.5 # which map to use

@@ -1,0 +1,14 @@
+<!-- Author: Bruce Huang
+     Email:  bjhuang@umich.edu
+     Date:   04/2019   -->
+
+<launch>
+
+    <group ns="ctto">
+        <node pkg="ctto" type="ctto" name="ctto" output="screen" />
+            <param name="line_intensity_bound" type="double" value="1000" /> 
+    </group>
+
+</launch>
+
+

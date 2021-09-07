@@ -1,0 +1,10 @@
+<launch>
+  <!-- Create static robot publisher -->
+  <node name="fake_robot_publisher" pkg="cassie_planning" type="static_robot_publisher" output="screen">
+    <rosparam file="$(find cassie_planning)/config/fake_robot.yaml" command="load" />
+  </node>
+
+
+
+</launch>
+

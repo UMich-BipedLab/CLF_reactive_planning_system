@@ -1,0 +1,117 @@
+<launch>
+  <!-- Create run rrt driver -->
+  <node name="planner" pkg="cassie_planning" type="test_pipeline" output="screen">
+    <rosparam file="$(find cassie_planning)/config/pose_sampler.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/lyap_dist_params.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/local_map.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/rrt_params.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/robot_params.yaml" command="load" />
+
+
+    <!-- log commands (saved in ~/.ros folder)-->
+    <param name="log_commands" value="1" />
+
+    <!-- ============= Driver mode ============= -->
+    <!-- 0: reveive map and pose from ROS and decide goal by searching on arc-->
+    <!-- 1: reveive map and pose from ROS and decide goal by clicking on rviz-->
+    <!-- 2: reveive map from ROS and pose from matlab and decide goal by searching on arc-->
+    <!-- 3: reveive map and pose from ROS and decide goal by adding the current pose
+            by the final_goal_x, final_goal_y, final_goal_yaw. It is used for if the
+            robot orientation is random at the beginning and we the final orientation-->
+    <param name="driver_mode" value="1" />
+
+
+    <!-- ============= CLF model ============= -->
+    <!-- 0: 2D differential wheeled robot-->
+    <!-- 1: 2D omnidirectional robot-->
+    <param name="clf_model" value="1" />
+
+
+    <!-- ============= Publishing Parameters ============= -->
+    <param name="replanning_rate" value="3" /> <!-- Hz -->
+    <param name="publishing_rate" value="300" /> <!-- Hz -->
+
+
+    <!-- ============= Timeout and semi-static map ============= -->
+    <param name="old_path_timeout" value="8" /> <!-- seconds -->
+    <param name="walking_in_place_timeout" value="5" /> <!-- seconds -->
+    <param name="cost_diff_threshold_within_timeout" value="5" /> <!-- sum of cost -->
+    <param name="command_history_length" value="50" /> <!-- how many to store and average -->
+
+
+    <!-- ============= final goal pose for testing ============= -->
+    <param name="map_number" value="0" />   <!-- 0: use values below or updated for
+                                                    map_number -->
+    <param name="final_pose_x" value="0.6" />   <!-- meter (30 for wavefield)-->
+    <param name="final_pose_y" value="31" />   <!-- meter (-6 for wavefield)-->
+    <param name="final_pose_yaw" value="0" />   <!-- deg -->
+    
+
+
+    <!-- ============= goal searching parameters ============= -->
+    <!-- 0: Use the intersection of the arc and 
+            the connected line of the robot and the final goal as the subgoal.
+            I.e., DO NOT consider cost of the subgoal-->
+    <!-- 1: search on an arc as usual-->
+    <param name="goal_search_mode" value="1" />   
+    <param name="goal_search_radius" value="3" />   <!-- meter -->
+    <param name="goal_search_delta_theta" value="2" /> <!-- deg -->
+
+    <!-- weight of cost of subgoal and distance to the final goal. -->
+    <!-- The larger the subgoal on the arc will toward the final goal-->
+    <param name="weight_subgoal_and_final_goal" value="10" /> 
+
+    <!-- weight of orientation of the subgoal and the robot orientation -->
+    <!-- percentage of the total cost -->
+    <param name="percentage_weight_of_orientation" value="0" /> 
+
+
+    <!-- search left and right from the current robot pose (should be positive)-->
+    <!-- map3 = (30, 30), map1 = (65, 65) or (50, 50)-->
+    <!-- map63 = (65, 65)-->
+    <!-- wavefield = (30, 30)-->
+    <param name="goal_search_view_left" value="20" /> 
+    <param name="goal_search_view_right" value="20" /> <!-- deg -->
+
+    <!-- buffer of an angle: given an angle, the cost inside the buffer 
+         will accumulated for the angle at 0.5 deg increment. In total, 
+         (2 * (buffer / 0.5)) will be evaulated -->
+    <param name="goal_search_buffer" value="10" /> <!-- deg -->
+
+
+    <!-- goal threshold -->
+    <param name="is_goal_threshold" value="1" />
+
+
+
+
+
+
+    <!-- frames -->
+    <param name="map_frame" value="odom" />
+    <param name="robot_frame" value="odom" />
+
+    <!-- subscription topics -->
+    <!--
+    <param name="multi_layer_map_topic" value="/fake_map_publisher/multi_layer_map" />
+    <param name="inekf_topic" value="/fake_robot_publisher/inekf" />
+    -->
+    <param name="multi_layer_map_topic" value="/elevation_mapping/elevation_map" />
+    <param name="inekf_topic" value="/cassie/inekf_state" />
+
+
+
+    
+
+
+
+    <!--  -->
+    <!-- ============= visulization parameters ============= -->
+    <param name="marker_lifetime" value="5" /> <!-- seconds -->
+
+  </node>
+
+</launch>
+

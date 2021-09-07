@@ -1,0 +1,89 @@
+<launch>
+  <!-- Create run rrt driver -->
+  <node name="planner" pkg="cassie_planning" type="test_pipeline" output="screen">
+    <rosparam file="$(find cassie_planning)/config/pose_sampler.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/local_map.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/rrt_params.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
+
+
+    <!-- log commands -->
+    <param name="log_commands" value="1" />
+
+
+    <!-- ============= Driver mode ============= -->
+    <!-- 0: reveive map and pose from ROS and decide goal by searching on arc-->
+    <!-- 1: reveive map and pose from ROS and decide goal by clicking on rviz-->
+    <!-- 2: reveive map from ROS and pose from matlab and decide goal by searching on arc-->
+    <!-- 3: reveive map and pose from ROS and decide goal by adding the current pose
+            by the final_goal_x, final_goal_y, final_goal_yaw-->
+    <param name="driver_mode" value="2" />
+
+
+
+    <!-- ============= Publishing Parameters ============= -->
+    <param name="replanning_rate" value="5" /> <!-- Hz -->
+    <param name="publishing_rate" value="80" /> <!-- Hz -->
+
+
+    <!-- ============= Timeout and semi-static map ============= -->
+    <param name="old_path_timeout" value="400" /> <!-- seconds -->
+    <param name="walking_in_place_timeout" value="5" /> <!-- seconds -->
+    <param name="cost_diff_threshold_within_timeout" value="3" /> <!-- sum of cost -->
+    <param name="command_history_length" value="100" /> <!-- how many to store and average -->
+
+
+    <!-- ============= final goal pose ============= -->
+    <param name="final_pose_x" value="5" />   <!-- 0, 5, meter -->
+    <param name="final_pose_y" value="-5" />   <!-- -8.5, -5, meter -->
+    <param name="final_pose_yaw" value="135" />   <!-- -45, -45, deg -->
+    
+
+
+    <!-- ============= goal searching parameters ============= -->
+    <param name="goal_search_radius" value="3.5" />   <!-- meter -->
+    <param name="goal_search_delta_theta" value="3" /> <!-- deg -->
+
+    <!-- search left and right from the current robot pose (should be positive)-->
+    <param name="goal_search_view_left" value="60" /> 
+    <param name="goal_search_view_right" value="60" /> <!-- deg -->
+
+    <!-- buffer of an angle: given an angle, the cost inside the buffer 
+         will accumulated for the angle at 0.5 deg increment. In total, 
+         (2 * (buffer / 0.5)) will be evaulated -->
+    <param name="goal_search_buffer" value="5" /> <!-- deg -->
+
+    <!-- weight of orientation of the subgoal and the robot orientation -->
+    <param name="percentage_weight_of_orientation" value="1" /> <!-- percentage of the total cost -->
+
+
+    <!-- goal threshold -->
+    <param name="is_goal_threshold" value="1" />
+
+
+
+
+
+
+    <!-- frames -->
+    <param name="map_frame" value="odom" />
+    <param name="robot_frame" value="odom" />
+
+    <!-- subscription topics -->
+    <param name="multi_layer_map_topic" value="/fake_map_publisher/multi_layer_map" />
+    <param name="inekf_topic" value="/fake_robot_publisher/inekf" />
+
+
+
+    
+
+
+
+    <!--  -->
+    <!-- ============= visulization parameters ============= -->
+    <param name="marker_lifetime" value="5" /> <!-- seconds -->
+
+  </node>
+
+</launch>

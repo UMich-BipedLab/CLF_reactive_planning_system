@@ -1,0 +1,75 @@
+<!-- Author: Bruce Huang
+     Email:  bjhuang@umich.edu
+     Date:   06/2019   -->
+
+<launch>
+
+    <!-- planning node -->
+    <group ns="planning">
+        <node pkg="grove_test" type="grove_test" name="grove_test" output="screen" launch-prefix="gdb -ex run --args"/>
+            <param name="use_sim_time" value="true" />
+
+            <!-- =============== functions ===============  -->
+            <param name="method" type="int" value="3" /> 
+
+
+
+            <!-- =============== goal finder ===============  -->
+            <!--
+                0: search from the smallest index
+                .
+                .
+                .
+                3: search from the largest index
+            -->
+            <param name="goal_finder" type="int" value="3" /> 
+            <param name="away_from_occupied" type="double" value="0.8" /> 
+
+
+            <!-- =============== auto select goal  ===============  -->
+            <param name="auto_goal_finder" type="bool" value="true" /> 
+            <param name="goal_finder_1" type="int" value="1" />  <!-- (+, +) -->
+            <param name="goal_finder_2" type="int" value="1" />  <!-- (-, +) -->
+            <param name="goal_finder_3" type="int" value="3" />  <!-- (-, -) -->
+            <param name="goal_finder_4" type="int" value="2" />  <!-- (+, -) -->
+            <param name="goal_finder_count_threshold" type="int" value="800" /> 
+
+            
+
+
+
+            <!-- =============== mapper settings  ===============  -->
+            <param name="occupied_cell" type="double" value="0.6" />   <!-- in meter -->
+            <param name="unknown_cell" type="int" value="-1" /> 
+            <param name="unknown_cell_cost" type="double" value="-1" /> 
+
+
+
+            <!-- =============== parameters ===============  -->
+            <param name="map_frame" type="string" value="odom" /> 
+            <param name="cassie_frame" type="string" value="/cassie/pelvis" /> 
+
+            <param name="order" type="int" value="3" /> <!-- in cell, scope: (x*2)^2  -->
+            <param name="searching_dim" type="int" value="40" /> <!-- in cell, scope: (x*2)^2  -->
+            <param name="expend_searching_dim_amount" type="int" value="3" /> <!-- in cell, scope: (x*2)^2  -->
+            <param name="expend_searching_dim_bound" type="int" value="20" />  <!-- how many time of expension-->
+            <param name="reached_goal_threshold" type="double" value="1" /> <!-- in meter -->
+            <param name="num_waypoints" type="int" value="10" /> 
+            <param name="skip_distance" type="double" value="1" />  <!-- unfinished -->
+
+
+
+            <!-- =============== publishers ===============  -->
+            <param name="pub_free" type="bool" value="false" /> 
+            <param name="pub_occupied" type="bool" value="false" /> 
+            <param name="pub_unknown" type="bool" value="false" /> 
+            <param name="pub_all_cells" type="bool" value="false" /> 
+            
+
+
+            <!-- =============== unused parameters ===============  -->
+            <param name="planning_horizon" type="double" value="1" /> 
+
+    </group>
+</launch>
+

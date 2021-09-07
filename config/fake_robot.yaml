@@ -1,0 +1,87 @@
+fake_robot:
+  robot_model: 1 # 0: perfect model. 1: ALIP model
+  clf_mode: 1 # 0: differential drive. 1: omni-directional
+  pose_mode: 0 # 0: get pose from here. 1,2,...: get pose from pre-set values for different maps
+  # receive commands from the plannr at 3 Hz
+  # (update it orientation and velocity based on the planner commands every 0.3 secs)
+  # Within the 0.3 secs, the robot will follow what the planner told it to do and
+  # will not receive new command within the 0.3 secs.
+  receiving_rate: 3 
+  publishing_rate: 300
+  rviz_rate: 3 
+
+  delta_t: 0.001
+
+  # position in meter
+  # 1st FRB beginning
+  x: -5.1 
+  y: 4.2 
+  yaw: 135
+
+  # 1st FRB 2st corner 
+  # x: -41
+  # y: 15.2
+  # yaw: 225
+
+
+  # 2st FRB 1st corner 
+  # x: 4.4797296524 
+  # y: -3.44215011597 
+  # yaw: -45
+
+  # orientation in deg
+  z: 0 
+  roll: 0 
+  pitch: 0 
+
+    # x: 0 #10 # 12 # 32, -2, -14, -5.5
+    # y: -4 # -2 # -8.5  # -26, -26, 14, 0
+    # yaw: -80
+    
+
+  # velocity in m/s
+  vx: 0
+  vy: 0
+  vz: 0
+
+  # goal for the launch file
+  # x: 14
+  # y: -14
+  # yaw: 0
+
+
+  ########
+  # map0 #
+  # ######
+  # position in meter
+  # x: -6 
+  # y: 0 
+  # z: 0 
+
+  # # orientation in deg
+  # roll: 0 
+  # pitch: 0 
+  # yaw: 0  
+
+  # goal
+  # x: 5
+  # y: -5
+  # yaw: 0
+
+  ########
+  # wavefield #
+  # ######
+  # position in meter
+  # x: 8 
+  # y: -2 
+  # z: 0 
+
+  # # orientation in deg
+  # roll: 0 
+  # pitch: 0 
+  # yaw: 0  
+
+  # goal
+  # x: 30
+  # y: -6 
+  # yaw: 0

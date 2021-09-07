@@ -1,0 +1,9 @@
+<launch>
+  <!-- Create fake map data publisher-->
+  <node name="fake_map_publisher" pkg="cassie_planning" type="fake_map_publisher" output="screen">
+    <rosparam file="$(find cassie_planning)/config/fake_map.yaml" command="load" />
+    <param name="rate" value="0.5" />
+  </node>
+</launch>
+
+

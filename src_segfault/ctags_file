@@ -1,0 +1,284 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CLFRRTStarPlanner	clf_rrt.cpp	/^    CLFRRTStarPlanner::CLFRRTStarPlanner($/;"	f	class:bipedlab::CLFRRTStarPlanner
+COST_FOR_UNKNOWN	main.cc	29;"	d	file:
+COST_FOR_UNKNOWN	pre_src/main.cc	29;"	d	file:
+COST_FOR_UNKNOWN	pre_src/main_2019.cc	40;"	d	file:
+CassieRRTTree	cassie_rrt_tree.cpp	/^CassieRRTTree::CassieRRTTree(const pose_t& start_pose, $/;"	f	class:bipedlab::CassieRRTTree
+Cost	cost_.cpp	/^Cost::Cost(const Cost& t_cost) :$/;"	f	class:bipedlab::Cost
+Cost	cost_.cpp	/^Cost::Cost(const double& distance_cost) :$/;"	f	class:bipedlab::Cost
+Cost	cost_.cpp	/^Cost::Cost(const double& distance_cost, const double& height_cost) :$/;"	f	class:bipedlab::Cost
+Cost	cost_.cpp	/^Cost::Cost(void) : distance_(0), height_(0) { };$/;"	f	class:bipedlab::Cost
+DEBUG_LEVEL	test_rrt.cpp	/^int DEBUG_LEVEL = 5; $/;"	v
+DEBUG_LEVEL	unit_test.cpp	/^int DEBUG_LEVEL = 0; $/;"	v
+Dstar	pre_src/Dstar.cc	/^Dstar::Dstar(int maxSteps, double C1){$/;"	f	class:Dstar
+Dstar	pre_src/Dstar_.cc	/^Dstar::Dstar(int maxSteps, double C1){$/;"	f	class:Dstar
+FRONTIER_CLOSE_LIST	pre_src/wavefront_frontier_detection.cc	/^const int MAP_OPEN_LIST = 1, MAP_CLOSE_LIST = 2, FRONTIER_OPEN_LIST = 3, FRONTIER_CLOSE_LIST = 4;$/;"	v
+FRONTIER_OPEN_LIST	pre_src/wavefront_frontier_detection.cc	/^const int MAP_OPEN_LIST = 1, MAP_CLOSE_LIST = 2, FRONTIER_OPEN_LIST = 3, FRONTIER_CLOSE_LIST = 4;$/;"	v
+FakeMap	fake_map.cpp	/^    FakeMap::FakeMap(int map_num, double obstacle_threshold) :$/;"	f	class:bipedlab::FakeMap
+LocalChart	local_chart.cpp	/^LocalChart::LocalChart(const pose_t& target_pose, double small_radius)$/;"	f	class:bipedlab::LocalChart
+LocalChart	local_chart.cpp	/^LocalChart::LocalChart(void)$/;"	f	class:bipedlab::LocalChart
+LocalMap	local_map.cpp	/^LocalMap::LocalMap(const pose_t& current_pose, $/;"	f	class:bipedlab::LocalMap
+LyapunovDistance	lyapunov_distance.cpp	/^LyapunovDistance::LyapunovDistance(const lyapunov_distance_params_t& params)$/;"	f	class:bipedlab::LyapunovDistance
+LyapunovDistance	lyapunov_distance.cpp	/^LyapunovDistance::LyapunovDistance(const pose_t& target_pose,$/;"	f	class:bipedlab::LyapunovDistance
+LyapunovDistance	lyapunov_distance.cpp	/^LyapunovDistance::LyapunovDistance(void) { }$/;"	f	class:bipedlab::LyapunovDistance
+LyapunovPath	lyapunov_path.cpp	/^LyapunovPath::LyapunovPath(LyapunovDistance& lyap_dis)$/;"	f	class:bipedlab::LyapunovPath
+LyapunovPath	lyapunov_path.cpp	/^LyapunovPath::LyapunovPath(LyapunovDistance& lyap_dis, $/;"	f	class:bipedlab::LyapunovPath
+LyapunovPath	lyapunov_path.cpp	/^LyapunovPath::LyapunovPath(const lyapunov_path_params_t& params,$/;"	f	class:bipedlab::LyapunovPath
+MAP_CLOSE_LIST	pre_src/wavefront_frontier_detection.cc	/^const int MAP_OPEN_LIST = 1, MAP_CLOSE_LIST = 2, FRONTIER_OPEN_LIST = 3, FRONTIER_CLOSE_LIST = 4;$/;"	v
+MAP_OPEN_LIST	pre_src/wavefront_frontier_detection.cc	/^const int MAP_OPEN_LIST = 1, MAP_CLOSE_LIST = 2, FRONTIER_OPEN_LIST = 3, FRONTIER_CLOSE_LIST = 4;$/;"	v
+MAX_STEPS	main.cc	28;"	d	file:
+MAX_STEPS	pre_src/main.cc	28;"	d	file:
+MAX_STEPS	pre_src/main_2019.cc	39;"	d	file:
+MIN_FOUND	pre_src/wavefront_frontier_detection.cc	/^static int MIN_FOUND = 1; \/\/ how many free neighbors would be considered as a frontier point$/;"	v	file:
+MIN_FRONTIER	pre_src/wavefront_frontier_detection.cc	/^static int MIN_FRONTIER = 1; \/\/ how many free neighbors would be considered as a frontier point$/;"	v	file:
+MapCost	map_cost.cpp	/^MapCost::MapCost(const LocalMap& local_map, const size_t& mode) : mode_(mode)$/;"	f	class:bipedlab::MapCost
+MapCost	map_cost.cpp	/^MapCost::MapCost(cost_params_t& cost_params, const LocalMap& local_map, $/;"	f	class:bipedlab::MapCost
+MultivariateGaussian	multivariate_gaussian.cpp	/^MultivariateGaussian::MultivariateGaussian($/;"	f	class:bipedlab::MultivariateGaussian
+MultivariateGaussian	multivariate_gaussian.cpp	/^MultivariateGaussian::MultivariateGaussian(size_t dimensions) : $/;"	f	class:bipedlab::MultivariateGaussian
+N_S	pre_src/wavefront_frontier_detection.cc	/^const int N_S = 8;$/;"	v
+Node	main.cc	/^            Node(T t, U u) {point.x=t; point.y=u;};$/;"	f	struct:Node
+Node	main.cc	/^            Node(T t, U u, int id, int pId) {$/;"	f	struct:Node
+Node	main.cc	/^        Node() {}$/;"	f	struct:Node
+Node	main.cc	/^        Node(geometry_msgs::Point p) : point(p) {}$/;"	f	struct:Node
+Node	main.cc	/^struct Node {$/;"	s	file:
+Node	pre_src/main.cc	/^            Node(T t, U u) {point.x=t; point.y=u;};$/;"	f	struct:Node
+Node	pre_src/main.cc	/^            Node(T t, U u, int id, int pId) {$/;"	f	struct:Node
+Node	pre_src/main.cc	/^        Node() {}$/;"	f	struct:Node
+Node	pre_src/main.cc	/^        Node(geometry_msgs::Point p) : point(p) {}$/;"	f	struct:Node
+Node	pre_src/main.cc	/^struct Node {$/;"	s	file:
+Node	pre_src/main_2019.cc	/^            Node(T t, U u) {point.x=t; point.y=u;};$/;"	f	struct:Node
+Node	pre_src/main_2019.cc	/^            Node(T t, U u, int id, int pId) {$/;"	f	struct:Node
+Node	pre_src/main_2019.cc	/^        Node() {}$/;"	f	struct:Node
+Node	pre_src/main_2019.cc	/^        Node(geometry_msgs::Point p) : point(p) {}$/;"	f	struct:Node
+Node	pre_src/main_2019.cc	/^struct Node {$/;"	s	file:
+OCCUPIED	pre_src/wavefront_frontier_detection.cc	/^static int OCCUPIED = 0; $/;"	v	file:
+OCC_THRESHOLD	pre_src/wavefront_frontier_detection.cc	/^static double OCC_THRESHOLD = 0.0;$/;"	v	file:
+OCC_THRESHOLD_OLD	pre_src/wavefront_frontier_detection.cc	/^static double OCC_THRESHOLD_OLD = 800;$/;"	v	file:
+PORT	main.cc	27;"	d	file:
+PORT	pre_src/main.cc	27;"	d	file:
+PORT	pre_src/main_2019.cc	38;"	d	file:
+SamplePose	sample_pose.cpp	/^SamplePose::SamplePose($/;"	f	class:bipedlab::SamplePose
+UNKNOWN	pre_src/wavefront_frontier_detection.cc	/^static int UNKNOWN = -1;$/;"	v	file:
+addMarker	utils/plotting.cpp	/^void addMarker(visualization_msgs::Marker &marker,$/;"	f	namespace:bipedlab::plotting
+addMarkerWithPose	utils/plotting.cpp	/^void addMarkerWithPose(visualization_msgs::Marker &marker,$/;"	f	namespace:bipedlab::plotting
+addMoreTimeNSamples	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::addMoreTimeNSamples($/;"	f	class:bipedlab::CLFRRTStarPlanner
+assignNewTargetPose	local_chart.cpp	/^void LocalChart::assignNewTargetPose(const pose_t& new_target_pose)$/;"	f	class:bipedlab::LocalChart
+assignNewTargetPose	lyapunov_distance.cpp	/^void LyapunovDistance::assignNewTargetPose(const pose_t& new_target_pose)$/;"	f	class:bipedlab::LyapunovDistance
+bipedlab	cassie_rrt_tree.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	clf_rrt.cpp	/^namespace bipedlab $/;"	n	file:
+bipedlab	cost_.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	fake_map.cpp	/^namespace bipedlab {$/;"	n	file:
+bipedlab	local_chart.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	local_map.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	lyapunov_distance.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	lyapunov_path.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	map_cost.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	multivariate_gaussian.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	pose.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	pose_distribution.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	sample_pose.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	standalone_local_chart.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	standalone_lyapunov_distance.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	utils/plotting.cpp	/^namespace bipedlab$/;"	n	file:
+calculateKey	pre_src/Dstar.cc	/^state Dstar::calculateKey(state u) {$/;"	f	class:Dstar
+calculateKey	pre_src/Dstar_.cc	/^state Dstar::calculateKey(state u) {$/;"	f	class:Dstar
+children	main.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
+children	pre_src/main.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
+children	pre_src/main_2019.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
+chooseRRTParentVanilla_	clf_rrt.cpp	/^        CLFRRTStarPlanner::chooseRRTParentVanilla_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+chooseRRTParentWithMapInfo_	clf_rrt.cpp	/^        CLFRRTStarPlanner::chooseRRTParentWithMapInfo_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+chooseRRTParent_	clf_rrt.cpp	/^        CLFRRTStarPlanner::chooseRRTParent_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+close	pre_src/Dstar.cc	/^bool Dstar::close(double x, double y) {$/;"	f	class:Dstar
+close	pre_src/Dstar_.cc	/^bool Dstar::close(double x, double y) {$/;"	f	class:Dstar
+compound	pose.cpp	/^pose2d_t pose2d_t::compound(const pose2d_t& origin) const$/;"	f	class:bipedlab::pose2d_t
+compound	pose_distribution.cpp	/^pose_distribution_t pose_distribution_t::compound(const pose_distribution_t& origin) const$/;"	f	class:bipedlab::pose_distribution_t
+computeDistanceFromPoint	lyapunov_distance.cpp	/^double LyapunovDistance::computeDistanceFromPoint($/;"	f	class:bipedlab::LyapunovDistance
+computeDistanceFromPointWithTargetPose	lyapunov_distance.cpp	/^double LyapunovDistance::computeDistanceFromPointWithTargetPose($/;"	f	class:bipedlab::LyapunovDistance
+computeDistanceFromPose	lyapunov_distance.cpp	/^double LyapunovDistance::computeDistanceFromPose(const pose_t& pose) const$/;"	f	class:bipedlab::LyapunovDistance
+computeDistanceFromPoseWithTargetPose	lyapunov_distance.cpp	/^double LyapunovDistance::computeDistanceFromPoseWithTargetPose($/;"	f	class:bipedlab::LyapunovDistance
+computeNeighborhoodRadius	cassie_rrt_tree.cpp	/^double CassieRRTTree::computeNeighborhoodRadius(const bool move_backward)$/;"	f	class:bipedlab::CassieRRTTree
+computePositionMapCost	map_cost.cpp	/^cost_t MapCost::computePositionMapCost(const pose_t& pose) const $/;"	f	class:bipedlab::MapCost
+computeRRTCostFromNodeToPose	clf_rrt.cpp	/^    cost_t CLFRRTStarPlanner::computeRRTCostFromNodeToPose($/;"	f	class:bipedlab::CLFRRTStarPlanner
+computeRRTCostFromPoseToNode	clf_rrt.cpp	/^    cost_t CLFRRTStarPlanner::computeRRTCostFromPoseToNode($/;"	f	class:bipedlab::CLFRRTStarPlanner
+computeShortestPath	pre_src/Dstar.cc	/^int Dstar::computeShortestPath() {$/;"	f	class:Dstar
+computeShortestPath	pre_src/Dstar_.cc	/^int Dstar::computeShortestPath() {$/;"	f	class:Dstar
+cost	pre_src/Dstar.cc	/^double Dstar::cost(state a, state b) {$/;"	f	class:Dstar
+cost	pre_src/Dstar_.cc	/^double Dstar::cost(state a, state b) {$/;"	f	class:Dstar
+deleteChildFromParent	cassie_rrt_tree.cpp	/^bool CassieRRTTree::deleteChildFromParent($/;"	f	class:bipedlab::CassieRRTTree
+distance_on_manifold	standalone_lyapunov_distance.cpp	/^double distance_on_manifold(double r, double phi, double kPhi)$/;"	f	namespace:bipedlab
+distance_to_manifold	standalone_lyapunov_distance.cpp	/^double distance_to_manifold(double r,$/;"	f	namespace:bipedlab
+distribution	multivariate_gaussian.cpp	/^double MultivariateGaussian::distribution(const Eigen::VectorXd& vector) const$/;"	f	class:bipedlab::MultivariateGaussian
+draw	pre_src/Dstar.cc	/^void Dstar::draw() {$/;"	f	class:Dstar
+draw	pre_src/Dstar.cc	/^void Dstar::draw() {}$/;"	f	class:Dstar
+draw	pre_src/Dstar_.cc	/^void Dstar::draw() {$/;"	f	class:Dstar
+draw	pre_src/Dstar_.cc	/^void Dstar::draw() {}$/;"	f	class:Dstar
+drawCell	pre_src/Dstar.cc	/^void Dstar::drawCell(state s, float size) {$/;"	f	class:Dstar
+drawCell	pre_src/Dstar.cc	/^void Dstar::drawCell(state s, float z) {}$/;"	f	class:Dstar
+drawCell	pre_src/Dstar_.cc	/^void Dstar::drawCell(state s, float size) {$/;"	f	class:Dstar
+drawCell	pre_src/Dstar_.cc	/^void Dstar::drawCell(state s, float z) {}$/;"	f	class:Dstar
+drawFinalPath	utils/plotting.cpp	/^void drawFinalPath(geometry_msgs::Point p1, geometry_msgs::Point p2, ros::Publisher marker_pub) {$/;"	f	namespace:bipedlab::plotting
+eightCondist	pre_src/Dstar.cc	/^double Dstar::eightCondist(state a, state b) {$/;"	f	class:Dstar
+eightCondist	pre_src/Dstar_.cc	/^double Dstar::eightCondist(state a, state b) {$/;"	f	class:Dstar
+extend	lyapunov_path.cpp	/^path_segment_t LyapunovPath::extend(const pose_t& robot_pose,$/;"	f	class:bipedlab::LyapunovPath
+extendFromTreeNodeToSampledPose_	clf_rrt.cpp	/^    path_segment_t CLFRRTStarPlanner::extendFromTreeNodeToSampledPose_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+findLowestCostNodeToPoseWithMapInfo	cassie_rrt_tree.cpp	/^CassieRRTTree::findLowestCostNodeToPoseWithMapInfo(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearbyNodesFromPose	cassie_rrt_tree.cpp	/^  CassieRRTTree::findNearbyNodesFromPose(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearbyNodesFromPoseWithMapInfo	cassie_rrt_tree.cpp	/^  CassieRRTTree::findNearbyNodesFromPoseWithMapInfo(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearbyNodesFromPose_	clf_rrt.cpp	/^        CLFRRTStarPlanner::findNearbyNodesFromPose_(const pose_t& sampled_pose, $/;"	f	class:bipedlab::CLFRRTStarPlanner
+findNearbyNodesToPose	cassie_rrt_tree.cpp	/^  CassieRRTTree::findNearbyNodesToPose(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearbyNodesToPoseWithMapInfo	cassie_rrt_tree.cpp	/^  CassieRRTTree::findNearbyNodesToPoseWithMapInfo(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearbyNodesToPose_	clf_rrt.cpp	/^        CLFRRTStarPlanner::findNearbyNodesToPose_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+findNearestNodeToPose	cassie_rrt_tree.cpp	/^CassieRRTTree::findNearestNodeToPose(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
+findNearestNodeToPose_	clf_rrt.cpp	/^    cassie_rrt_node_t* CLFRRTStarPlanner::findNearestNodeToPose_($/;"	f	class:bipedlab::CLFRRTStarPlanner
+findNewPath	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::findNewPath($/;"	f	class:bipedlab::CLFRRTStarPlanner
+findPathFromSampledNodeToPose	clf_rrt.cpp	/^    path_segment_t CLFRRTStarPlanner::findPathFromSampledNodeToPose($/;"	f	class:bipedlab::CLFRRTStarPlanner
+getFourCorners	local_map.cpp	/^LocalMap::getFourCorners(void) $/;"	f	class:bipedlab::LocalMap
+getG	pre_src/Dstar.cc	/^double Dstar::getG(state u) {$/;"	f	class:Dstar
+getG	pre_src/Dstar_.cc	/^double Dstar::getG(state u) {$/;"	f	class:Dstar
+getPath	pre_src/Dstar.cc	/^list<state> Dstar::getPath() {$/;"	f	class:Dstar
+getPath	pre_src/Dstar_.cc	/^list<state> Dstar::getPath() {$/;"	f	class:Dstar
+getPred	pre_src/Dstar.cc	/^void Dstar::getPred(state u,list<state> &s) {$/;"	f	class:Dstar
+getPred	pre_src/Dstar_.cc	/^void Dstar::getPred(state u,list<state> &s) {$/;"	f	class:Dstar
+getRHS	pre_src/Dstar.cc	/^double Dstar::getRHS(state u) {$/;"	f	class:Dstar
+getRHS	pre_src/Dstar_.cc	/^double Dstar::getRHS(state u) {$/;"	f	class:Dstar
+getSucc	pre_src/Dstar.cc	/^void Dstar::getSucc(state u,list<state> &s) {$/;"	f	class:Dstar
+getSucc	pre_src/Dstar_.cc	/^void Dstar::getSucc(state u,list<state> &s) {$/;"	f	class:Dstar
+get_big_neighbours	pre_src/wavefront_frontier_detection.cc	/^void get_big_neighbours(int n_array[], int position, int map_width) {$/;"	f
+get_column_from_offset	pre_src/wavefront_frontier_detection.cc	/^int get_column_from_offset(int offset, int width) {$/;"	f
+get_neighbours	pre_src/wavefront_frontier_detection.cc	/^void get_neighbours(int n_array[], int position, int map_width) {$/;"	f
+get_row_from_offset	pre_src/wavefront_frontier_detection.cc	/^int get_row_from_offset(int offset, int width) {$/;"	f
+gradient_descent_on_manifold	standalone_lyapunov_distance.cpp	/^double gradient_descent_on_manifold(double r, double phi, double kPhi, double rangeEpsilon)$/;"	f	namespace:bipedlab
+heuristic	pre_src/Dstar.cc	/^double Dstar::heuristic(state a, state b) {$/;"	f	class:Dstar
+heuristic	pre_src/Dstar_.cc	/^double Dstar::heuristic(state a, state b) {$/;"	f	class:Dstar
+id	main.cc	/^        int id;$/;"	m	struct:Node	file:
+id	pre_src/main.cc	/^        int id;$/;"	m	struct:Node	file:
+id	pre_src/main_2019.cc	/^        int id;$/;"	m	struct:Node	file:
+incrementalRotation_	lyapunov_path.cpp	/^pose_t LyapunovPath::incrementalRotation_(const pose_t& robot_pose,$/;"	f	class:bipedlab::LyapunovPath
+incrementalTranslation_	lyapunov_path.cpp	/^pose_t LyapunovPath::incrementalTranslation_(const pose_t& robot_pose, \/\/ point$/;"	f	class:bipedlab::LyapunovPath
+init	pre_src/Dstar.cc	/^void Dstar::init(int sX, int sY, int gX, int gY) {$/;"	f	class:Dstar
+init	pre_src/Dstar_.cc	/^void Dstar::init(double sX, double sY, double gX, double gY) {$/;"	f	class:Dstar
+initializeTree	cassie_rrt_tree.cpp	/^void CassieRRTTree::initializeTree(const pose_t& start_pose)$/;"	f	class:bipedlab::CassieRRTTree
+insert	pre_src/Dstar.cc	/^void Dstar::insert(state u) {$/;"	f	class:Dstar
+insert	pre_src/Dstar_.cc	/^void Dstar::insert(state u) {$/;"	f	class:Dstar
+insertNode	cassie_rrt_tree.cpp	/^cassie_rrt_node_t* CassieRRTTree::insertNode(const pose_t& new_sample,$/;"	f	class:bipedlab::CassieRRTTree
+insertRRTNode_	clf_rrt.cpp	/^        CLFRRTStarPlanner::insertRRTNode_(cassie_rrt_node_t* parent_node,$/;"	f	class:bipedlab::CLFRRTStarPlanner
+interpolate_pose	pose.cpp	/^pose2d_t interpolate_pose(const pose2d_t& priorPose, const pose2d_t& currentPose, int64_t desiredPoseTime)$/;"	f	namespace:bipedlab
+isNeighborObstacleFree	local_map.cpp	/^bool LocalMap::isNeighborObstacleFree($/;"	f	class:bipedlab::LocalMap
+isObstacleFree	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::isObstacleFree(const std::vector<pose_t>& steps) const$/;"	f	class:bipedlab::CLFRRTStarPlanner
+isValid	pre_src/Dstar.cc	/^bool Dstar::isValid(state u) {$/;"	f	class:Dstar
+isValid	pre_src/Dstar_.cc	/^bool Dstar::isValid(state u) {$/;"	f	class:Dstar
+is_frontier_point	pre_src/wavefront_frontier_detection.cc	/^bool is_frontier_point(const nav_msgs::OccupancyGrid& map, int point, int map_size, int map_width) {$/;"	f
+keyHashCode	pre_src/Dstar.cc	/^float Dstar::keyHashCode(state u) {$/;"	f	class:Dstar
+keyHashCode	pre_src/Dstar_.cc	/^float Dstar::keyHashCode(state u) {$/;"	f	class:Dstar
+lineOfSight	local_chart.cpp	/^LocalChart::lineOfSight(const point2d_t<float>& observerPosition) const$/;"	f	class:bipedlab::LocalChart
+lineOfSight	standalone_local_chart.cpp	/^lineOfSight(const point2d_t<float>& observerPosition,$/;"	f	namespace:bipedlab::local_chart
+loadTestMap1_	fake_map.cpp	/^    void FakeMap::loadTestMap1_() {$/;"	f	class:bipedlab::FakeMap
+loadTestMap2_	fake_map.cpp	/^    void FakeMap::loadTestMap2_() {$/;"	f	class:bipedlab::FakeMap
+loadWaveField_	fake_map.cpp	/^    void FakeMap::loadWaveField_() {$/;"	f	class:bipedlab::FakeMap
+local_chart	standalone_local_chart.cpp	/^namespace local_chart$/;"	n	namespace:bipedlab	file:
+logPosterior	multivariate_gaussian.cpp	/^double MultivariateGaussian::logPosterior(const Eigen::VectorXd& vector) const$/;"	f	class:bipedlab::MultivariateGaussian
+main	main.cc	/^int main(int argc, char **argv) {$/;"	f
+main	pre_src/main.cc	/^int main(int argc, char **argv) {$/;"	f
+main	pre_src/main_2019.cc	/^int main(int argc, char **argv) {$/;"	f
+main	test_rrt.cpp	/^int main(int argc, char *argv[]) {$/;"	f
+main	unit_test.cpp	/^int main(int argc, char *argv[]) {$/;"	f
+makeNewCell	pre_src/Dstar.cc	/^void Dstar::makeNewCell(state u) {$/;"	f	class:Dstar
+makeNewCell	pre_src/Dstar_.cc	/^void Dstar::makeNewCell(state u) {$/;"	f	class:Dstar
+moveRobot	utils/plotting.cpp	/^bool moveRobot(ros::Publisher marker_pub,$/;"	f	namespace:bipedlab::plotting
+nonholonomic_distance	standalone_lyapunov_distance.cpp	/^double nonholonomic_distance(double r,$/;"	f	namespace:bipedlab
+occupied	pre_src/Dstar.cc	/^bool Dstar::occupied(state u) {$/;"	f	class:Dstar
+occupied	pre_src/Dstar_.cc	/^bool Dstar::occupied(state u) {$/;"	f	class:Dstar
+operator !=	pose.cpp	/^bool operator!=(const pose2d_t& lhs, const pose2d_t& rhs)$/;"	f	namespace:bipedlab
+operator !=	pose_distribution.cpp	/^bool operator!=(const pose_distribution_t& lhs, const pose_distribution_t& rhs)$/;"	f	namespace:bipedlab
+operator +	cost_.cpp	/^inline Cost Cost::operator+ (const Cost& t_cost)$/;"	f	class:bipedlab::Cost
+operator <	cost_.cpp	/^inline bool Cost::operator< (const Cost& rhs) const$/;"	f	class:bipedlab::Cost
+operator <<	pose.cpp	/^std::ostream& operator<<(std::ostream& out, const pose2d_t& pose)$/;"	f	namespace:bipedlab
+operator <<	pose.cpp	/^std::ostream& operator<<(std::ostream& out, const pose_6dof_t& pose)$/;"	f	namespace:bipedlab
+operator ==	pose.cpp	/^bool operator==(const pose2d_t& lhs, const pose2d_t& rhs)$/;"	f	namespace:bipedlab
+operator ==	pose_distribution.cpp	/^bool operator==(const pose_distribution_t& lhs, const pose_distribution_t& rhs)$/;"	f	namespace:bipedlab
+pack_waypoint_data_t	pre_src/waypoint_data_t.c	/^void pack_waypoint_data_t(const waypoint_data_t *bus, unsigned char bytes[188])$/;"	f
+pack_waypoint_data_t	pre_src/waypoint_data_t_new.c	/^void pack_waypoint_data_t(const waypoint_data_t *bus, unsigned char bytes[216])$/;"	f
+pack_waypoint_data_t	waypoint_data_t.c	/^void pack_waypoint_data_t(const waypoint_data_t *bus, unsigned char bytes[188])$/;"	f
+pack_waypoint_data_t	waypoint_data_t_new.c	/^void pack_waypoint_data_t(const waypoint_data_t *bus, unsigned char bytes[216])$/;"	f
+parentId	main.cc	/^        int parentId;$/;"	m	struct:Node	file:
+parentId	pre_src/main.cc	/^        int parentId;$/;"	m	struct:Node	file:
+parentId	pre_src/main_2019.cc	/^        int parentId;$/;"	m	struct:Node	file:
+plotting	utils/plotting.cpp	/^namespace plotting $/;"	n	namespace:bipedlab	file:
+point	main.cc	/^        geometry_msgs::Point point;$/;"	m	struct:Node	file:
+point	pre_src/main.cc	/^        geometry_msgs::Point point;$/;"	m	struct:Node	file:
+point	pre_src/main_2019.cc	/^        geometry_msgs::Point point;$/;"	m	struct:Node	file:
+point2rp	local_chart.cpp	/^LocalChart::point2rp(const point2d_t<float>& point) const$/;"	f	class:bipedlab::LocalChart
+point2rp	standalone_local_chart.cpp	/^point2rp(const point2d_t<float>& point,$/;"	f	namespace:bipedlab::local_chart
+pose2d_t	pose.cpp	/^pose2d_t::pose2d_t(const pose_distribution_t& distribution)$/;"	f	class:bipedlab::pose2d_t
+pose2rpd	local_chart.cpp	/^egocentric_polar_coords_t LocalChart::pose2rpd(const pose_t& robot_pose) const$/;"	f	class:bipedlab::LocalChart
+pose2rpd	standalone_local_chart.cpp	/^egocentric_polar_coords_t pose2rpd($/;"	f	namespace:bipedlab::local_chart
+prepareForSampling	multivariate_gaussian.cpp	/^void MultivariateGaussian::prepareForSampling(void)$/;"	f	class:bipedlab::MultivariateGaussian
+probability	multivariate_gaussian.cpp	/^double MultivariateGaussian::probability(const Eigen::VectorXd& vector) const$/;"	f	class:bipedlab::MultivariateGaussian
+propagateRRTCostToChildren	clf_rrt.cpp	/^    void CLFRRTStarPlanner::propagateRRTCostToChildren($/;"	f	class:bipedlab::CLFRRTStarPlanner
+publishDebug_	clf_rrt.cpp	/^    void CLFRRTStarPlanner::publishDebug_()$/;"	f	class:bipedlab::CLFRRTStarPlanner
+reconnectRRTTree	clf_rrt.cpp	/^    void CLFRRTStarPlanner::reconnectRRTTree($/;"	f	class:bipedlab::CLFRRTStarPlanner
+remove	pre_src/Dstar.cc	/^void Dstar::remove(state u) {$/;"	f	class:Dstar
+remove	pre_src/Dstar_.cc	/^void Dstar::remove(state u) {$/;"	f	class:Dstar
+replan	pre_src/Dstar.cc	/^bool Dstar::replan(const std::atomic_bool &cancelled) {$/;"	f	class:Dstar
+replan	pre_src/Dstar_.cc	/^bool Dstar::replan() {$/;"	f	class:Dstar
+resolvehelper	pre_src/main_2019.cc	/^int resolvehelper(const char* hostname, int family, const char* service, sockaddr_storage* pAddr) {$/;"	f
+retrievePathFromLeaf_	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::retrievePathFromLeaf_(cassie_rrt_node_t* leaf_node)$/;"	f	class:bipedlab::CLFRRTStarPlanner
+rewireRRTNodes	clf_rrt.cpp	/^    void CLFRRTStarPlanner::rewireRRTNodes($/;"	f	class:bipedlab::CLFRRTStarPlanner
+rp2point	local_chart.cpp	/^LocalChart::rp2point(const reduced_egocentric_polar_coords_t& coords) const$/;"	f	class:bipedlab::LocalChart
+rp2point	local_chart.cpp	/^point2d_t<float> LocalChart::rp2point(double r, double phi) const$/;"	f	class:bipedlab::LocalChart
+rp2point	standalone_local_chart.cpp	/^point2d_t<float> rp2point($/;"	f	namespace:bipedlab::local_chart
+rp2point	standalone_local_chart.cpp	/^point2d_t<float> rp2point(double r, double phi, const pose_t& end_pose)$/;"	f	namespace:bipedlab::local_chart
+rpd2pose	local_chart.cpp	/^pose_t LocalChart::rpd2pose(const egocentric_polar_coords_t& coords) const$/;"	f	class:bipedlab::LocalChart
+rpd2pose	local_chart.cpp	/^pose_t LocalChart::rpd2pose(double r, double phi, double delta) const$/;"	f	class:bipedlab::LocalChart
+rpd2pose	standalone_local_chart.cpp	/^pose_t rpd2pose($/;"	f	namespace:bipedlab::local_chart
+rpd2pose	standalone_local_chart.cpp	/^pose_t rpd2pose(double r, double phi, double delta, const pose_t& end_pose)$/;"	f	namespace:bipedlab::local_chart
+rpd2target	local_chart.cpp	/^pose_t LocalChart::rpd2target($/;"	f	class:bipedlab::LocalChart
+rpd2target	standalone_local_chart.cpp	/^pose_t rpd2target(const egocentric_polar_coords_t& coords, const pose_t& robotPose) $/;"	f	namespace:bipedlab::local_chart
+rpd2target	standalone_local_chart.cpp	/^pose_t rpd2target(double r, double phi, double delta, const pose_t& robotPose) $/;"	f	namespace:bipedlab::local_chart
+runCLFRRTAlgorithm	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::runCLFRRTAlgorithm($/;"	f	class:bipedlab::CLFRRTStarPlanner
+sample	multivariate_gaussian.cpp	/^Eigen::VectorXd MultivariateGaussian::sample(void) const$/;"	f	class:bipedlab::MultivariateGaussian
+sampleGoalOnBoundary	sample_pose.cpp	/^void SamplePose::sampleGoalOnBoundary(pose_t& sampled_pose) $/;"	f	class:bipedlab::SamplePose
+samplePose_	clf_rrt.cpp	/^    pose_t CLFRRTStarPlanner::samplePose_(bool& is_goal)$/;"	f	class:bipedlab::CLFRRTStarPlanner
+sampleRandomPoseWithGoalBiasedWithinLocalMap	sample_pose.cpp	/^pose_t SamplePose::sampleRandomPoseWithGoalBiasedWithinLocalMap(bool& is_goal)$/;"	f	class:bipedlab::SamplePose
+sampleRandomPoseWithinLocalMap	sample_pose.cpp	/^pose_t SamplePose::sampleRandomPoseWithinLocalMap(void)$/;"	f	class:bipedlab::SamplePose
+setDistributionStatistics	multivariate_gaussian.cpp	/^void MultivariateGaussian::setDistributionStatistics($/;"	f	class:bipedlab::MultivariateGaussian
+setG	pre_src/Dstar.cc	/^void Dstar::setG(state u, double g) {$/;"	f	class:Dstar
+setG	pre_src/Dstar_.cc	/^void Dstar::setG(state u, double g) {$/;"	f	class:Dstar
+setRHS	pre_src/Dstar.cc	/^double Dstar::setRHS(state u, double rhs) {$/;"	f	class:Dstar
+setRHS	pre_src/Dstar_.cc	/^double Dstar::setRHS(state u, double rhs) {$/;"	f	class:Dstar
+smooth_descent_on_manifold	standalone_lyapunov_distance.cpp	/^double smooth_descent_on_manifold(double r, double phi, double kPhi, double rangeEpsilon)$/;"	f	namespace:bipedlab
+stabilizeDeltaStar	lyapunov_distance.cpp	/^double LyapunovDistance::stabilizeDeltaStar(const point2d_t<float> point) const$/;"	f	class:bipedlab::LyapunovDistance
+stabilizeDeltaStarWithTargetPose	lyapunov_distance.cpp	/^double LyapunovDistance::stabilizeDeltaStarWithTargetPose($/;"	f	class:bipedlab::LyapunovDistance
+stabilizeHeading	lyapunov_distance.cpp	/^double LyapunovDistance::stabilizeHeading(const point2d_t<float> point) const$/;"	f	class:bipedlab::LyapunovDistance
+stabilizeHeadingWithTargetPose	lyapunov_distance.cpp	/^double LyapunovDistance::stabilizeHeadingWithTargetPose($/;"	f	class:bipedlab::LyapunovDistance
+stabilizing_delta_star	standalone_lyapunov_distance.cpp	/^double stabilizing_delta_star(double r,$/;"	f	namespace:bipedlab
+steer	lyapunov_path.cpp	/^path_segment_t LyapunovPath::steer(const pose_t& robot_pose, $/;"	f	class:bipedlab::LyapunovPath
+steerAway	lyapunov_path.cpp	/^LyapunovPath::steerAway(const point2d_t<float>& point, double max_extension) const$/;"	f	class:bipedlab::LyapunovPath
+transformToNewFrame	pose.cpp	/^pose2d_t pose2d_t::transformToNewFrame(const pose2d_t& newFrame) const$/;"	f	class:bipedlab::pose2d_t
+trueDist	pre_src/Dstar.cc	/^double Dstar::trueDist(state a, state b) {$/;"	f	class:Dstar
+trueDist	pre_src/Dstar_.cc	/^double Dstar::trueDist(state a, state b) {$/;"	f	class:Dstar
+unpack_waypoint_data_t	pre_src/waypoint_data_t.c	/^void unpack_waypoint_data_t(const unsigned char bytes[188], waypoint_data_t *bus)$/;"	f
+unpack_waypoint_data_t	pre_src/waypoint_data_t_new.c	/^void unpack_waypoint_data_t(const unsigned char bytes[216], waypoint_data_t *bus)$/;"	f
+unpack_waypoint_data_t	waypoint_data_t.c	/^void unpack_waypoint_data_t(const unsigned char bytes[188], waypoint_data_t *bus)$/;"	f
+unpack_waypoint_data_t	waypoint_data_t_new.c	/^void unpack_waypoint_data_t(const unsigned char bytes[216], waypoint_data_t *bus)$/;"	f
+updateCell	pre_src/Dstar.cc	/^void Dstar::updateCell(int x, int y, double val) {$/;"	f	class:Dstar
+updateCell	pre_src/Dstar_.cc	/^void Dstar::updateCell(double x, double y, double val) {$/;"	f	class:Dstar
+updateGoal	pre_src/Dstar.cc	/^void Dstar::updateGoal(int x, int y) {$/;"	f	class:Dstar
+updateGoal	pre_src/Dstar_.cc	/^void Dstar::updateGoal(double x, double y) {$/;"	f	class:Dstar
+updateLocalMap	local_map.cpp	/^void LocalMap::updateLocalMap(pose_t current_pose)$/;"	f	class:bipedlab::LocalMap
+updateStart	pre_src/Dstar.cc	/^void Dstar::updateStart(int x, int y) {$/;"	f	class:Dstar
+updateStart	pre_src/Dstar_.cc	/^void Dstar::updateStart(double x, double y) {$/;"	f	class:Dstar
+updateVertex	pre_src/Dstar.cc	/^void Dstar::updateVertex(state u) {$/;"	f	class:Dstar
+updateVertex	pre_src/Dstar_.cc	/^void Dstar::updateVertex(state u) {$/;"	f	class:Dstar
+wfd	pre_src/wavefront_frontier_detection.cc	/^vector<vector<int> > wfd(const nav_msgs::OccupancyGrid& map, $/;"	f
+~CLFRRTStarPlanner	clf_rrt.cpp	/^    CLFRRTStarPlanner::~CLFRRTStarPlanner() { }$/;"	f	class:bipedlab::CLFRRTStarPlanner
+~Cost	cost_.cpp	/^Cost::~Cost() { };$/;"	f	class:bipedlab::Cost
+~FakeMap	fake_map.cpp	/^    FakeMap::~FakeMap() {}$/;"	f	class:bipedlab::FakeMap
+~LocalMap	local_map.cpp	/^LocalMap::~LocalMap() {};$/;"	f	class:bipedlab::LocalMap
+~MapCost	map_cost.cpp	/^MapCost::~MapCost(void) { };$/;"	f	class:bipedlab::MapCost
+~SamplePose	sample_pose.cpp	/^SamplePose::~SamplePose() { }$/;"	f	class:bipedlab::SamplePose

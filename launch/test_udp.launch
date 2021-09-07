@@ -1,0 +1,10 @@
+<launch>
+  <!-- run test_udp -->
+  <node name="test_udp" pkg="cassie_planning" type="test_udp" output="screen">
+    <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
+
+    <param name="publishing_rate" value="2" /> <!-- Hz -->
+  </node>
+
+</launch>
+

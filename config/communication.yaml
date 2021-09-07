@@ -1,0 +1,15 @@
+communication:
+    # ip_to_send: "192.168.1.154"
+    # ip_to_send: "10.10.10.105"
+    # ip_to_send: "35.3.58.195"
+    # port_to_receive: "28000"
+    # port_to_send: "26000"
+  # Cassie 
+  ip_to_send: "10.10.10.3"
+  port_to_send: "30000"
+  port_to_receive: "31000"
+
+  # outdoor laptop
+  # ip_to_send: "10.10.10.103"
+  # port_to_send: "26001"
+  # port_to_receive: "28001"

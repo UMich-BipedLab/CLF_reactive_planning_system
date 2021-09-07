@@ -1,0 +1,6 @@
+cost_map:
+  obstacle_cost: 10
+  unknown_cost:  2
+  outside_map_cost: 1000
+  weight_of_height: 15
+

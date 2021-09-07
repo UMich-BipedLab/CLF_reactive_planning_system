@@ -1,0 +1,29 @@
+lyap_dist:
+  #############################
+  # differential driven robot #
+  #############################
+  k_phi: 1.2
+  k_delta: 3
+  small_radius: 0.01
+  vector_field_type: 0
+
+  ##########################
+  # omni-directional robot #
+  ##########################
+  # general parameters
+  gamma: 1 # weight of orientation, used to compute distance
+  alpha: 10 # weight between omega and vy
+  beta: 3 # move equilibria outside of FoV
+
+  # control parameters
+  # k_r1, k_r2: how far cassie walks diagonally
+  k_r1: 1 # height of the surface
+  k_r2: 5 # width of the inner cone
+  k_delta1: 0.1 #  height of the surface
+  k_delta2: 10 # speed of saturation
+  k_delta_to_manifold: 0 # for noholonomic distance (see eq.19 on the overleaf note)
+
+  # check standalone_moni_lyapunov_distance.h for different types
+  omni_CLF_model: 2 # vanilla(0), smooth_vanilla(1), smooth_weighted_vanilla(2)
+  omni_CLF_solution: 4 
+
