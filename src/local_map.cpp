@@ -36,6 +36,19 @@ namespace bipedlab
 {
 LocalMap::LocalMap(const pose_t* current_pose, 
                    const grid_map::GridMap* map, 
+                   const local_map_params_t& local_map_info,
+                   const terrain_plane_params_t& terrain_plane_params):
+    current_pose_(current_pose), 
+    map_(map), 
+    local_map_info_(local_map_info),
+    terrain_plane_params_(terrain_plane_params),
+    is_successful(false)
+    {
+        updateLocalMap(*current_pose);
+    }
+
+LocalMap::LocalMap(const pose_t* current_pose, 
+                   const grid_map::GridMap* map, 
                    const local_map_params_t& local_map_info):
     current_pose_(current_pose), 
     map_(map), 
@@ -89,6 +102,8 @@ LocalMap::~LocalMap() {
 
 void LocalMap::updateLocalMap(const pose_t& current_pose)
 {
+
+
     if (!map_->exists("elevation_map") && !map_->exists("elevation")) 
     {
         debugger::debugColorTextOutput("[LocalMap]/[updateLocalMap] "
@@ -178,10 +193,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
         this->local_map.setBasicLayers({"filtered_elevation_map"});
     }
 
+
     // smooth and slope (assign unknow = unknow_cost + robot.z)
     if (local_map_info_.mode == 3)
     {
-
         this->local_map.add("filtered_elevation_map", 0);
         map_operation::averageNANFiltering(this->local_map, 
                 this->local_map.getSize(),
@@ -205,8 +220,9 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
         this->local_map.setBasicLayers({"filtered_elevation_map"});
     }
 
+
     // smooth and use signed distnace to the cloest obstacles 
-    // This do the smoothing first, computing SDF after computing obstalces
+    // This does the smoothing first, computing SDF after computing obstalces
     if (local_map_info_.mode == 4)
     {
         this->local_map.add("filtered_elevation_map", 0);
@@ -241,8 +257,109 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
         this->local_map.setBasicLayers({"filtered_elevation_map"});
     }
 
+    // smooth and plane computation 
+    if (local_map_info_.mode == 6)
+    {
+        this->local_map.add("filtered_elevation_map", 0);
+        terrain_lock_.lock();
+        terrain_info = 
+            map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
+                    this->local_map, 
+                    this->local_map.getSize(),
+                    this->local_map_info_.smooth_radius,
+                    "elevation_map", "", 
+                    local_map_info_.nan_percentage_in_radius, 
+                    local_map_info_.cost_params.unknown_cost,
+                    current_pose,
+                    terrain_plane_params_.delta_x,
+                    terrain_plane_params_.delta_y,
+                    terrain_plane_params_.num_planes,
+                    terrain_plane_params_.min_num_points_for_fitting);
+        terrain_lock_.unlock();
 
-    // update occupancy map 
+        // map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
+        size_t num_NAN = map_operation::checkNAN(this->local_map, 
+                "filtered_elevation_map");
+        debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
+        this->local_map.setBasicLayers({"filtered_elevation_map"});
+    }
+
+    // smooth, palne computation, and  terrain information 
+    if (local_map_info_.mode == 7)
+    {
+        this->local_map.add("filtered_elevation_map", 0);
+        terrain_lock_.lock();
+        terrain_info = 
+            map_operation::averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
+                    this->local_map, 
+                    this->local_map.getSize(),
+                    this->local_map_info_.smooth_radius,
+                    "elevation_map", "", 
+                    local_map_info_.nan_percentage_in_radius, 
+                    local_map_info_.cost_params.unknown_cost,
+                    current_pose,
+                    terrain_plane_params_.delta_x,
+                    terrain_plane_params_.delta_y,
+                    terrain_plane_params_.num_planes,
+                    terrain_plane_params_.min_num_points_for_fitting);
+        terrain_lock_.unlock();
+        size_t num_NAN = map_operation::checkNAN(this->local_map, 
+                "filtered_elevation_map");
+        debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
+        this->local_map.setBasicLayers({"filtered_elevation_map"});
+    }
+
+
+    // smooth and plane computation 
+    // if (local_map_info_.mode == 6)
+    // {
+    //     this->local_map.add("filtered_elevation_map", 0);
+    //     terrain_ptr_ = 
+    //         map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
+    //                 this->local_map, 
+    //                 this->local_map.getSize(),
+    //                 this->local_map_info_.smooth_radius,
+    //                 "elevation_map", "", 
+    //                 local_map_info_.nan_percentage_in_radius, 
+    //                 local_map_info_.cost_params.unknown_cost,
+    //                 current_pose,
+    //                 terrain_plane_params_.delta_x,
+    //                 terrain_plane_params_.delta_y,
+    //                 terrain_plane_params_.num_planes);
+
+    //     // map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
+    //     size_t num_NAN = map_operation::checkNAN(this->local_map, 
+    //             "filtered_elevation_map");
+    //     debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
+    //     this->local_map.setBasicLayers({"filtered_elevation_map"});
+    // }
+
+    // // smooth, palne computation, and  terrain information 
+    // if (local_map_info_.mode == 7)
+    // {
+    //     this->local_map.add("filtered_elevation_map", 0);
+    //     terrain_ptr_ = 
+    //         map_operation::averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
+    //                 this->local_map, 
+    //                 this->local_map.getSize(),
+    //                 this->local_map_info_.smooth_radius,
+    //                 "elevation_map", "", 
+    //                 local_map_info_.nan_percentage_in_radius, 
+    //                 local_map_info_.cost_params.unknown_cost,
+    //                 current_pose,
+    //                 terrain_plane_params_.delta_x,
+    //                 terrain_plane_params_.delta_y,
+    //                 terrain_plane_params_.num_planes);
+
+    //     // map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
+    //     size_t num_NAN = map_operation::checkNAN(this->local_map, 
+    //             "filtered_elevation_map");
+    //     debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
+    //     this->local_map.setBasicLayers({"filtered_elevation_map"});
+    // }
+
+
+    // update occupancy map for **ALL MODE**!!!!!!!!!!!!!
     std::string elevaion_map_name = "elevation_map";
     if (local_map_info_.mode == 2 || local_map_info_.mode == 3)
     {
@@ -256,6 +373,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
             elevaion_map_name, "occupancy_map",
             local_map_info_.obstacle_threshold, has_nan);
 
+
+
+
+    // check if map contains nan values
     if (has_nan && local_map_info_.mode == 0)
     {
         debugger::debugColorTextOutput("[LocalMap] "
@@ -269,6 +390,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
         exit(-1);
     }
 
+    // compute signed distance after assigning obstacles
     if (local_map_info_.mode == 4)
     {
         map_operation::computeSignedDistnaceField(this->local_map, 
@@ -277,6 +399,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
                 "occupancy_map", "filtered_elevation_map");
     }
 
+    // bresham line algorithm to assign unknown behind obstalces
     if (local_map_info_.mode == 5)
     {
         grid_map::Index index;
@@ -285,8 +408,6 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
                 index, local_map_info_.cost_params.unknown_cost,
                 "occupancy_map", "filtered_elevation_map");
     }
-
-
 }
 
 // the order of vertices are (0, 0), (0, 1), (1, 1), (1, 0) in the grid map

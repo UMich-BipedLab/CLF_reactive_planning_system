@@ -114,6 +114,11 @@ typedef struct robot_state
         updateInEKFWithPose();
     }
 
+    robot_state(const pose_t& pose) : pose(pose), velocity(), roll(0), pitch(0), yaw(0) 
+    { 
+        updateInEKFWithPose();
+    }
+
     robot_state(pose_t& pose, velocity_t& velocity) : 
         pose(pose), velocity(velocity) , roll(0), pitch(0), yaw(0)
     { 

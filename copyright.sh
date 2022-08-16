@@ -1,3 +1,5 @@
+#!/bin/bash
+read -r -d '' license <<-"EOF"
 /* Copyright (C) 2013-2020, The Regents of The University of Michigan.
  * All rights reserved.
  * This software was developed in the Biped Lab (https://www.biped.solutions/)
@@ -27,54 +29,14 @@
  * AUTHOR: Bruce JK Huang (bjhuang@umich.edu)
  * WEBSITE: https://www.BrucebotStudio.com/
  */
-#include <stdlib.h>
-#include <iostream>
+EOF
 
-#include <ros/ros.h>
+files=$(grep -rL "All rights reserved" * | grep "\.h\|\.cpp")
 
-#include <nav_msgs/Odometry.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
+for f in $files
+do
+  echo -e "$license" > temp  
+  cat $f >> temp
+  mv temp $f
+done
 
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h> // Marker
-
-#include <pcl_conversions/pcl_conversions.h>
-// #include <velodyne_pointcloud/point_types.h>
-// #include <velodyne_pointcloud/pointcloudXYZIR.h>
-
-
-
-#include <eigen3/Eigen/Dense> // SVD
-#include <eigen3/Eigen/StdVector>
-#include <eigen3/Eigen/Eigenvalues>
-
-
-#include "driver.h"
-#include "utils/plotting.h"
-#include "utils/debugger.h"
-#include "utils/utils.h"
-#include "clf_rrt.h"
-
-
-
-// 0-4 general debugging purposes
-// 5-8: algorithm status/process
-int DEBUG_LEVEL = 6; 
-
-using namespace bipedlab;
-// typedef velodyne_pointcloud::PointXYZIR PointXYZRI;
-
-
-int main(int argc, char *argv[]) {
-    // // ros
-    ros::init(argc, argv, "driver");
-    ros::NodeHandle nh("~");
-
-    Driver driver_node(nh);
-    std::cout<< "ALL DONE" << std::endl;
-
-    return 0;
-}

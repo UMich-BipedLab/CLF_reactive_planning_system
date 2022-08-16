@@ -259,6 +259,17 @@ public:
                       pose_sampler_params_t& pose_sampler_params,
                       rrt_params_t& rrt_params, 
                       cost_params_t& cost_map_params,
+                      lyapunov_distance_params_t& lyap_dist_params,
+                      const terrain_plane_params_t& terrain_palne_params);
+
+    CLFRRTStarPlanner(const grid_map::GridMap& map, 
+                      const local_map_params_t& local_map_params,
+                      const pose_t& start_pose, 
+                      const pose_t& goal_pose,
+                      robot_state_t& robot_state, 
+                      pose_sampler_params_t& pose_sampler_params,
+                      rrt_params_t& rrt_params, 
+                      cost_params_t& cost_map_params,
                       lyapunov_distance_params_t& lyap_dist_params);
     virtual ~CLFRRTStarPlanner();
 

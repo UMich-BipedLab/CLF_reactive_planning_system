@@ -50,6 +50,95 @@ namespace bipedlab
             pose_sampler_params_t& pose_sampler_params,
             rrt_params_t& rrt_params,
             cost_params_t& map_cost_params,
+            lyapunov_distance_params_t& lyap_dist_params, 
+            const terrain_plane_params_t& terrain_plane_params) : 
+        global_map_(&global_map), 
+        start_pose_(start_pose), 
+        goal_pose_(goal_pose), 
+        robot_state_(robot_state),
+        rrt_params_(rrt_params),
+        lyap_dist_params_(lyap_dist_params),
+        total_seconds_spent_(0),
+        is_debugging_(2) // will save more data for visualization
+                        // 2: to show sampled poses
+                        // 3: to show nearby poses
+    { 
+        // std::cout << "[In CLFRRTStarPlanner()] &global_map = " << &global_map << std::endl;
+        // std::cout << "[In CLFRRTStarPlanner()] global_map_ = " << global_map_ << std::endl;
+
+        debugger::debugTextOutput("[CLFRRT] CLFRRTStarPlanner initializing...", 4);
+
+
+        // for (auto name : global_map.getLayers())
+        //     std::cout << "layer: " << name << std::endl;
+
+        local_map_ = new LocalMap(&start_pose_, global_map_, 
+                                  local_map_params, terrain_plane_params);
+        // std::cout << "[In CLFRRTStarPlanner()] global_map_ in Plannar == map_ of LocalMap: ";
+        // local_map_->printMapAddress();
+        // std::cout << std::endl;
+
+        // new_local_map_ = new LocalMap(start_pose_, global_map, length_of_local_map);
+        // new_local_map_ = *local_map_; 
+        // debug_local_map = local_map_->local_map;
+
+
+        sampling_ = new SamplePose(pose_sampler_params, 
+                                   local_map_, 
+                                   &goal_pose_,
+                                   &robot_state_);
+
+        map_cost_ = new MapCost(map_cost_params, local_map_, rrt_params_.mode);
+
+        // LyapunovDistance() is declared here for speed
+        // whichever class (lyapunovPath, CassieRRTTree) 
+        // wants to change the target pose of the local chart inside of 
+        // the LyapunovDistance(), CHANGE ON ITS OWN!
+        lyap_dist_ = new LyapunovDistance(lyap_dist_params_); 
+        lyap_path_ = new LyapunovPath(*lyap_dist_, *local_map_, *map_cost_, rrt_params_.mode);
+        rrt_tree_ = new CassieRRTTree(start_pose_, *lyap_dist_, *lyap_path_);
+
+
+        if (is_debugging_)
+        {
+            path_pub_ = 
+                nh_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("debug_path_points", 1);
+
+            marker_pub_ =
+                nh_.advertise<visualization_msgs::MarkerArray>("debug_results", 10);
+
+            debug_path_points_ = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>);
+            debug_path_points_->header.frame_id = "map";
+        }
+
+        debugger::debugTextOutput("[CLFRRT] Classes in CLFRRTStarPlanner are "
+                                  "all initialized!", 5);
+
+        // debugger::debugTextOutput("[CLFRRT Constructor] testing sampling function... ", 0);
+        // bool dummy;
+        // sample_pose_testing = 
+        //     sampling_->sampleRandomPoseWithGoalBiasedWithinLocalMap(dummy);
+
+        // debugger::debugTextOutput("[CLFRRT] CLFRRT is running... ", 5);
+        // is_path_ = CLFRRTStarPlanner::findNewPath(
+        //         rrt_params_.num_samples, 
+        //         rrt_params_.allowed_computation_time, 
+        //         rrt_params_.terminate_if_path);
+        // debugger::debugOutput("[CLFRRT] has found a path? ", is_path_, 5);
+        // debugger::debugOutput("[CLFRRT] Cost:", minimum_cost_to_goal_, 5);
+        // debugger::debugOutput("[CLFRRT] points of path ", 
+        //         planned_path_.size(), 5);
+        // debugger::debugOutput("[CLFRRT] number of waypoints ", 
+        //         planned_waypoints_.size(), 5);
+    }
+    CLFRRTStarPlanner::CLFRRTStarPlanner(
+            const grid_map::GridMap& global_map, // no need to keep local copy (LC)
+            const local_map_params_t& local_map_params,
+            const pose_t& start_pose, const pose_t& goal_pose, // need to keep LC 
+            robot_state_t& robot_state, // no need to keep LC
+            pose_sampler_params_t& pose_sampler_params,
+            rrt_params_t& rrt_params,
+            cost_params_t& map_cost_params,
             lyapunov_distance_params_t& lyap_dist_params) : 
         global_map_(&global_map), 
         start_pose_(start_pose), 

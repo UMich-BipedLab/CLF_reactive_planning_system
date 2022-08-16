@@ -1,0 +1,30 @@
+###################
+# plane computation
+# #################
+#             --------------------------------     ^
+#            /                                /    |
+#           /                                /     |
+#          /                                /      | delta_x
+#         /                                /       |
+#        /                                /        |
+#        ---------------------------------         v
+#                     ...                                 -> num_planes
+#       --------------------------------     ^
+#      /                                /    |
+#     /                                /     |
+#    /                                /      | delta_x
+#   /            / \                 /       |
+#  /              | robot_pose      /        |
+#  ---------------------------------         v
+#
+#  <------------------------------->
+#               2*delta_y
+#
+#
+plane_params:
+  delta_x: 0.3
+  delta_y: 0.5
+  num_planes: 5
+  min_num_points_for_fitting: 3 # minimum number of points for fitting or set status = -1
+
+

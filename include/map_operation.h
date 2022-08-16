@@ -29,6 +29,7 @@
  */
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <grid_map_msgs/GridMap.h>
+#include "utils/plane.h"
 #include "pose.h"
 
 
@@ -147,6 +148,61 @@ void assignUnknownBehindObstacles(grid_map::GridMap& map,
         const std::string compute_on_layer,
         const std::string apply_to_layer);
 
+std::vector<plane::terrain_info_t>
+averageMapFilteringAndcomputeTerrainPlaneInformation(grid_map::GridMap& map,
+        const grid_map::Size& gridMapSize,
+        const double filterRadius,
+        const std::string apply_to_layer,
+        std::string output_layer,
+        const double percentage, // larger, the more be corrected
+        const double nan_value,
+        const pose_t& robot_pose,
+        const double delta_x,
+        const double delta_y,
+        const size_t num_planes, 
+        const size_t num_points_for_fitting);
+
+std::vector<plane::terrain_info_t>
+averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
+        grid_map::GridMap& map,
+        const grid_map::Size& gridMapSize,
+        const double filterRadius,
+        const std::string apply_to_layer,
+        std::string output_layer,
+        const double percentage, // larger, the more be corrected
+        const double nan_value,
+        const pose_t& robot_pose,
+        const double delta_x,
+        const double delta_y,
+        const size_t num_planes, 
+        const size_t num_points_for_fitting);
+
+// std::shared_ptr<std::vector<plane::terrain_info_t>>
+// averageMapFilteringAndcomputeTerrainPlaneInformation(grid_map::GridMap& map,
+//         const grid_map::Size& gridMapSize,
+//         const double filterRadius,
+//         const std::string apply_to_layer,
+//         std::string output_layer,
+//         const double percentage, // larger, the more be corrected
+//         const double nan_value,
+//         const pose_t& robot_pose,
+//         const double delta_x,
+//         const double delta_y,
+//         const double num_planes);
+// 
+// std::shared_ptr<std::vector<plane::terrain_info_t>>
+// averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
+//         grid_map::GridMap& map,
+//         const grid_map::Size& gridMapSize,
+//         const double filterRadius,
+//         const std::string apply_to_layer,
+//         std::string output_layer,
+//         const double percentage, // larger, the more be corrected
+//         const double nan_value,
+//         const pose_t& robot_pose,
+//         const double delta_x,
+//         const double delta_y,
+//         const double num_planes);
 
 
     

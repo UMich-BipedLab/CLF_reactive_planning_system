@@ -13,5 +13,5 @@ robot_params:
   enlarge_mode: 3
   normalized_speed: 0.5
   velocity_factor: 1.5
-  vx_upper_bound: 0.7 # 0.7
-  vy_upper_bound: 0.2 # 0.1
+  vx_upper_bound: 0 # 0.7, 0.7
+  vy_upper_bound: 0 # 0.2, 0.1

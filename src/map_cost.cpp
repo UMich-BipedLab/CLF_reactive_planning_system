@@ -77,7 +77,10 @@ cost_t MapCost::computePositionMapCost(const pose_t& pose) const
                 }
                 else if (this->local_map_->local_map_info_.mode == 2 || 
                          this->local_map_->local_map_info_.mode == 4 || 
-                         this->local_map_->local_map_info_.mode == 5) // filtering
+                         this->local_map_->local_map_info_.mode == 5 ||
+                         this->local_map_->local_map_info_.mode == 6 || 
+                         this->local_map_->local_map_info_.mode == 7 
+                         ) // filtering
                 {
                     // debugger::debugOutput("[MapCost]/[computePositionMapCost] ", 
                     //         "Use filtered map", 3);

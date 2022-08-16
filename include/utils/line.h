@@ -200,13 +200,7 @@ namespace line
         
         return points;
     }
-
-
-
-
-    
 } /* line */ 
-    
 } /* bipedlab */ 
 
 

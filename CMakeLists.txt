@@ -13,7 +13,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -DEIGEN_NO_DEBUG -march=n
 # if ( MSVC )
 #     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4")
 # endif()
-add_definitions(-w)
+# add_definitions(-w)
 
 
 ## Find catkin macros and libraries
@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
   inekf_msgs
   planner_msgs
   grid_map_msgs
+  rviz_visual_tools
 )
 
 find_package(PCL 1.2 REQUIRED)
@@ -65,6 +66,7 @@ catkin_package(
 Eigen3
   grid_map_ros  
   grid_map_core
+  CATKIN_DEPENDS geometry_msgs
 
 )
 
@@ -100,39 +102,8 @@ include_directories(/usr/local/include/)
 ####################################################################################
 #### Simple Testing
 ####################################################################################
-add_executable(simple_test src/simple_test.cpp src/fake_map.cpp
-    src/multivariate_gaussian.cpp  src/local_map.cpp
-    src/map_operation.cpp
-)
-add_dependencies(simple_test ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
-target_link_libraries(simple_test ${catkin_LIBRARIES} ${PCL_LIBRARIES}
-)
-
-add_executable(test_udp src/test_udp.cpp src/fake_map.cpp
-    src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
-    src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
-    src/map_operation.cpp
-    src/sample_pose.cpp src/pose.cpp 
-    src/lyapunov_path.cpp 
-    src/standalone_local_chart.cpp
-    src/standalone_omni_local_chart.cpp
-    src/standalone_omni_lyapunov_distance.cpp
-    src/omni_local_chart.cpp
-    src/utils/plotting.cpp
-    src/map_cost.cpp
-    src/communication.cpp
-    src/planner_info_to_controller_t.c
-    src/controller_info_to_planner_t.c
-    src/control_commands.cpp
-)
-add_dependencies(test_udp ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_udp ${catkin_LIBRARIES} ${PCL_LIBRARIES}
-)
-
-
-add_executable(unit_test src/unit_test.cpp src/fake_map.cpp
+add_executable(test_plane_fitting src/test_plane_fitting.cpp src/fake_map.cpp
+    src/utils/plane.cpp
     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
     src/map_operation.cpp
@@ -149,38 +120,119 @@ add_executable(unit_test src/unit_test.cpp src/fake_map.cpp
     src/controller_info_to_planner_t.c
     src/driver.cpp
     src/control_commands.cpp
+    src/map_operation.cpp
     src/lie_group.cpp
 )
-add_dependencies(unit_test ${${PROJECT_NAME}_EXPORTED_TARGETS}
+add_dependencies(test_plane_fitting ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS})
-target_link_libraries(unit_test ${catkin_LIBRARIES} ${PCL_LIBRARIES}
-)
-####################################################################################
-
-
-
-####################################################################################
-#### publisher
-####################################################################################
-add_executable(fake_map_publisher src/map_publisher.cpp src/fake_map.cpp
-    src/multivariate_gaussian.cpp 
-    src/map_operation.cpp
-)
-add_dependencies(fake_map_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fake_map_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+target_link_libraries(test_plane_fitting ${catkin_LIBRARIES} ${PCL_LIBRARIES}
 )
 
 
-add_executable(static_robot_publisher src/static_robot_publisher.cpp
-    src/utils/plotting.cpp
-)
-add_dependencies(static_robot_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
-target_link_libraries(static_robot_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES}
-)
+# add_executable(simple_test src/simple_test.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp  src/local_map.cpp
+#     src/map_operation.cpp
+# )
+# add_dependencies(simple_test ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(simple_test ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
 
-
+# add_executable(test_udp src/test_udp.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
+#     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
+#     src/map_operation.cpp
+#     src/sample_pose.cpp src/pose.cpp 
+#     src/lyapunov_path.cpp 
+#     src/standalone_local_chart.cpp
+#     src/standalone_omni_local_chart.cpp
+#     src/standalone_omni_lyapunov_distance.cpp
+#     src/omni_local_chart.cpp
+#     src/utils/plotting.cpp
+#     src/map_cost.cpp
+#     src/communication.cpp
+#     src/planner_info_to_controller_t.c
+#     src/controller_info_to_planner_t.c
+#     src/control_commands.cpp
+# )
+# add_dependencies(test_udp ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_udp ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+ 
+# add_executable(test_rviz_tool src/test_rviz_tool.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
+#     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
+#     src/map_operation.cpp
+#     src/sample_pose.cpp src/pose.cpp 
+#     src/lyapunov_path.cpp 
+#     src/standalone_local_chart.cpp
+#     src/standalone_omni_local_chart.cpp
+#     src/standalone_omni_lyapunov_distance.cpp
+#     src/omni_local_chart.cpp
+#     src/utils/plotting.cpp
+#     src/map_cost.cpp
+#     src/communication.cpp
+#     src/planner_info_to_controller_t.c
+#     src/controller_info_to_planner_t.c
+#     src/driver.cpp
+#     src/control_commands.cpp
+#     src/lie_group.cpp
+# )
+# add_dependencies(test_rviz_tool ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_rviz_tool ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+ 
+# add_executable(unit_test src/unit_test.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
+#     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
+#     src/map_operation.cpp
+#     src/sample_pose.cpp src/pose.cpp 
+#     src/lyapunov_path.cpp 
+#     src/standalone_local_chart.cpp
+#     src/standalone_omni_local_chart.cpp
+#     src/standalone_omni_lyapunov_distance.cpp
+#     src/omni_local_chart.cpp
+#     src/utils/plotting.cpp
+#     src/map_cost.cpp
+#     src/communication.cpp
+#     src/planner_info_to_controller_t.c
+#     src/controller_info_to_planner_t.c
+#     src/driver.cpp
+#     src/control_commands.cpp
+#     src/lie_group.cpp
+# )
+# add_dependencies(unit_test ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(unit_test ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+# ####################################################################################
+# 
+# 
+# 
+# ####################################################################################
+# #### publisher
+# ####################################################################################
+# add_executable(fake_map_publisher src/map_publisher.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp 
+#     src/map_operation.cpp
+# )
+# add_dependencies(fake_map_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(fake_map_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+# 
+# 
+# add_executable(static_robot_publisher src/static_robot_publisher.cpp
+#     src/utils/plotting.cpp
+# )
+# add_dependencies(static_robot_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(static_robot_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+# 
+# 
 add_executable(fake_robot_publisher src/fake_robot_publisher.cpp
     src/fake_robot.cpp
     src/utils/plotting.cpp
@@ -189,36 +241,36 @@ add_dependencies(fake_robot_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS}
     ${catkin_EXPORTED_TARGETS})
 target_link_libraries(fake_robot_publisher ${catkin_LIBRARIES} ${PCL_LIBRARIES}
 )
-
-
-####################################################################################
-
-
-
-####################################################################################
-#### RRT TESTING 
-####################################################################################
-add_executable(test_rrt src/test_rrt.cpp src/fake_map.cpp
-    src/multivariate_gaussian.cpp 
-    src/clf_rrt.cpp src/cassie_rrt_tree.cpp 
-    src/lyapunov_distance.cpp
-    src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
-    src/map_operation.cpp
-    src/sample_pose.cpp src/pose.cpp 
-    src/lyapunov_path.cpp 
-    src/standalone_local_chart.cpp
-    src/standalone_omni_local_chart.cpp
-    src/standalone_omni_lyapunov_distance.cpp
-    src/omni_local_chart.cpp
-    src/utils/plotting.cpp
-    src/map_cost.cpp
-    src/control_commands.cpp
-)
-add_dependencies(test_rrt ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_rrt ${catkin_LIBRARIES} ${PCL_LIBRARIES}
-)
-####################################################################################
+# 
+# 
+# ####################################################################################
+# 
+# 
+# 
+# ####################################################################################
+# #### RRT TESTING 
+# ####################################################################################
+# add_executable(test_rrt src/test_rrt.cpp src/fake_map.cpp
+#     src/multivariate_gaussian.cpp 
+#     src/clf_rrt.cpp src/cassie_rrt_tree.cpp 
+#     src/lyapunov_distance.cpp
+#     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
+#     src/map_operation.cpp
+#     src/sample_pose.cpp src/pose.cpp 
+#     src/lyapunov_path.cpp 
+#     src/standalone_local_chart.cpp
+#     src/standalone_omni_local_chart.cpp
+#     src/standalone_omni_lyapunov_distance.cpp
+#     src/omni_local_chart.cpp
+#     src/utils/plotting.cpp
+#     src/map_cost.cpp
+#     src/control_commands.cpp
+# )
+# add_dependencies(test_rrt ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#     ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_rrt ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+# )
+# ####################################################################################
 
 
 
@@ -228,6 +280,7 @@ target_link_libraries(test_rrt ${catkin_LIBRARIES} ${PCL_LIBRARIES}
 #### PIPELINE TESTING 
 ####################################################################################
 add_executable(test_pipeline src/main.cpp src/fake_map.cpp
+    src/utils/plane.cpp
     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
     src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
     src/map_operation.cpp

@@ -8,6 +8,7 @@
     <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
     <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
     <rosparam file="$(find cassie_planning)/config/robot_params.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/plane.yaml" command="load" />
 
 
     <!-- log commands (saved in ~/.ros folder)-->
@@ -50,11 +51,11 @@
 
 
     <!-- ============= final goal pose for testing ============= -->
-    <param name="map_number" value="-1" />   <!-- -1: exploration mode <no final goal>
+    <param name="map_number" value="0" />   <!-- -1: exploration mode <no final goal>
                                                   0: use values below or 
                                                   1, 2, 3 ...:  updated for map_number -->
-    <param name="final_pose_x" value="2.2" />   <!-- meter (30 for wavefield)-->
-    <param name="final_pose_y" value="-22" />   <!-- meter (-6 for wavefield)-->
+    <param name="final_pose_x" value="-9.5" />   <!-- meter (30 for wavefield)-->
+    <param name="final_pose_y" value="-24.2" />   <!-- meter (-6 for wavefield)-->
     <param name="final_pose_yaw" value="0" />   <!-- deg -->
 
     <rosparam param="final_pose_x_list"> [2.2]</rosparam>
@@ -71,7 +72,7 @@
     <!-- 1: Search on an arc and decide purely on local traversibility -->
     <!-- 2: Turn if encounter intersection <suggest changing serach view to 
             [180, 180]> -->
-    <param name="goal_search_mode" value="2" />   
+    <param name="goal_search_mode" value="1" />   
     <param name="goal_search_radius" value="2" />   <!-- meter -->
     <param name="goal_search_delta_theta" value="2" /> <!-- deg -->
 
@@ -88,8 +89,8 @@
     <!-- map3 = (30, 30), map1 = (65, 65) or (50, 50)-->
     <!-- map63 = (65, 65)-->
     <!-- wavefield = (30, 30)-->
-    <param name="goal_search_view_left" value="180" /> 
-    <param name="goal_search_view_right" value="180" /> <!-- deg -->
+    <param name="goal_search_view_left" value="30" /> 
+    <param name="goal_search_view_right" value="30" /> <!-- deg -->
 
     <!-- buffer of an angle: given an angle, the cost inside the buffer 
          will accumulated for the angle at 0.5 deg increment. In total, 
@@ -129,6 +130,7 @@
     <!--
     <param name="inekf_topic" value="/cassie/inekf_state" />
     <param name="multi_layer_map_topic" value="/fake_map_publisher/multi_layer_map" />
+    <param name="multi_layer_map_topic" value="/cassie_node/elevation_map" />
     -->
     <param name="multi_layer_map_topic" value="/elevation_mapping/elevation_map" />
     <param name="inekf_topic" value="/fake_robot_publisher/inekf" />

@@ -65,15 +65,19 @@
 #include "utils/debugger.h"
 #include "utils/utils.h"
 #include "utils/line.h"
+#include "utils/plane.h"
 #include "clf_rrt.h"
+#include "point.h"
 #include "csv.h"
 #include "point.h"
+
+#include "rviz_visual_tools/rviz_visual_tools.h"
 
 
 
 // 0-4 general debugging purposes
 // 5-8: algorithm status/process
-int DEBUG_LEVEL = 3; 
+int DEBUG_LEVEL = 3;
 
 using namespace bipedlab;
 // typedef velodyne_pointcloud::PointXYZIR PointXYZRI;
@@ -84,6 +88,183 @@ int main(int argc, char *argv[]) {
     ros::init(argc, argv, "test_rrt");
     ros::NodeHandle nh;
     // std::cout << DEBUG_LEVEL << std::endl;
+
+   // debugger::debugOutput("[Unit test] ", "Least Squares", 5);
+   // Eigen::MatrixXf A = Eigen::MatrixXf::Random(3, 2);
+   // std::cout << "Here is the matrix A:\n" << A << std::endl;
+   // Eigen::VectorXf b = Eigen::VectorXf::Random(3);
+   // std::cout << "Here is the right hand side b:\n" << b << std::endl;
+   // std::cout << "The least-squares solution is:\n"
+   //      << A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b) << std::endl;
+
+
+
+   // For visualizing things in rviz
+
+
+   debugger::debugTitleTextOutput("[Unit test] ", "Plane Fitting", 5);
+   // plane::plane_t test_plane;
+   // test_plane.print();
+   int dataset = 2;
+
+   Eigen::MatrixXd lidar_points; // input points
+   double y_width = 2;
+   if (dataset == 1)
+   {
+       Eigen::MatrixXd test_points(3, 8); // input points
+       test_points <<
+           0.014047, 0.53454, 0.5782, 0.06592, 0.00070, 0.42795, 0.73865, 0.84611,
+           0.047974, 0.83191, 0.4617, 0.45222, 0.33814, 0.67403, 0.52019, 0.45547,
+           0.677590, 0.27622, 0.7249, 0.80713, 0.34365, 0.47471, 0.29546, 0.20986;
+       lidar_points = test_points;
+   }
+   else if (dataset == 2)
+   {
+       size_t num_test_points = 10000;
+       auto xs = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, -1, 3);
+       auto ys = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
+                                                               -y_width/2, y_width/2);
+       auto z_noise = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
+                                                               -0.05, 0.05);
+       std::vector<float> zs(num_test_points, 0);
+       double k1 = 1;
+       double k2 = 0;
+       for (int i = 0; i < num_test_points; ++i)
+       {
+           zs[i] = std::cos(k1 * xs[i]) * std::cos(k2 * ys[i]) + z_noise[i];
+       }
+
+       Eigen::MatrixXf test_points(3, num_test_points);
+       float* xs_ptr = &xs[0];
+       test_points.row(0) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(xs.data(), xs.size());
+
+       float* ys_ptr = &ys[0];
+       test_points.row(1) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(ys.data(), ys.size());
+
+       float* zs_ptr = &zs[0];
+       test_points.row(2) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(zs.data(), zs.size());
+       lidar_points = test_points.cast<double>();
+   }
+
+   // robot pose
+   pose_t robot_pose(0, 0, deg_to_rad(0));
+   Eigen::Vector2f robot_pose_vec = Eigen::Vector2f(std::cos(robot_pose.theta),
+                                                    std::sin(robot_pose.theta));
+
+
+
+
+   // plane fitting
+   int max_step = 5;
+   double increment = 0.3;
+   double delta_y = 0.3;
+   size_t num_points = lidar_points.cols();
+   std::vector<plane::terrain_info_t> terrain_plane_vec(max_step);
+   std::vector<std::vector<Eigen::Vector3f>> segment_points(max_step);
+
+   for (int i = 0; i < num_points; ++i)
+   {
+       Eigen::Vector2f v = lidar_points.block(0, i, 2, 1).cast<float>() - Eigen::Vector2f(robot_pose.x, robot_pose.y);
+       double distance = v.norm();
+       double x_distance = robot_pose_vec.dot(v);
+
+       double theta = std::acos(x_distance / std::max(distance, 1e-5));
+       double y_distance = distance * std::sin(theta);
+       if (y_distance > delta_y || x_distance < 0)
+           continue;
+
+
+       // int k = -1;
+       // if (x_distance >= 0 && x_distance <= increment)
+       // {
+       //     k = 0;
+       // }
+       // else if (x_distance >= 1 * increment && x_distance <= 2 * increment)
+       //     k = 1;
+       // else if (x_distance >= 2 * increment && x_distance <= 3 * increment)
+       //     k = 2;
+       // else if (x_distance >= 3 * increment && x_distance <= 4 * increment)
+       //     k = 3;
+       // else if (x_distance >= 4 * increment && x_distance <= 5 * increment)
+       //     k = 4;
+       // else
+       // {
+       //     continue;
+       //     // std::string error_msg = "No such distnace: " + std::to_string(k);
+       //     // debugger::debugExitColor(error_msg, __LINE__, __FILE__);
+       // }
+       int k = std::floor(x_distance / increment);
+       if (k < max_step)
+       {
+           segment_points[k].push_back(lidar_points.col(i).cast<float>());
+       }
+   }
+
+   // plane fitting
+   
+   for (int seg = 0; seg < max_step; ++seg)
+   {
+       size_t num_seg = segment_points[seg].size();
+       Eigen::MatrixXf seg_points = Eigen::MatrixXf(3, num_seg);
+       for (int i = 0; i < num_seg; ++i)
+       {
+           seg_points.col(i) = segment_points[seg][i];
+       }
+       terrain_plane_vec[seg].points = seg_points;
+       auto plane_params = plane::fitPlaneViaLeastSquares(terrain_plane_vec[seg].points);
+       std::cout << "===================================\n";
+       std::vector<float> plane_coefficients = plane_params.getPlaneCoefficients();
+       terrain_plane_vec[seg].normal_vector = plane_params.normal_vector;
+       terrain_plane_vec[seg].fixed_point = plane_params.fixed_point;
+
+       // terrain_plane_vec[seg] = *plane_params;
+   }
+   // lidar_points = seg_points;
+
+
+   // plane_params->print(); // from matlab: 1.7764e-15          1.5           -1  -1.1552e-15
+   // std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
+
+
+   // viz
+   rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
+   visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base","/rviz_visual_markers"));
+   visual_tools_->loadMarkerPub();  // create publisher before waiting
+
+   // Clear messages
+   visual_tools_->deleteAllMarkers();
+   visual_tools_->enableBatchPublishing();
+
+   // publish all points
+   for (int i = 0; i < lidar_points.cols(); ++i) {
+       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
+       std_msgs::ColorRGBA color = visual_tools_->getColor(rviz_visual_tools::WHITE);
+       visual_tools_->publishSphere(lidar_points.col(i), color, scale, "all points");
+   }
+
+   // publish plane information
+   for (int seg = 0; seg < max_step; ++seg)
+   {
+       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
+       std_msgs::ColorRGBA color = visual_tools_->getColorScale((float) seg / max_step);
+       for (int i = 0; i < terrain_plane_vec[seg].points.cols(); ++i)
+       {
+           visual_tools_->publishSphere(
+                   terrain_plane_vec[seg].points.col(i).cast<double>(),
+                   color, scale, "seg points");
+       }
+       std::vector<float> plane_coefficients = 
+           terrain_plane_vec[seg].getPlaneCoefficients();
+       Eigen::Vector3d center = terrain_plane_vec[seg].points.rowwise().mean().cast<double>();
+       visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
+               plane_coefficients[1],
+               plane_coefficients[2],
+               plane_coefficients[3], center, color, increment, 2*delta_y);
+   }
+   visual_tools_->trigger();
+   exit(0);
+
+
 
 
     // debugger::debugOutput("[Unit test] Quaternion", "", 5);
@@ -182,7 +363,7 @@ int main(int argc, char *argv[]) {
 
 
     // test assignUnknownBehindObstacles
-    
+
 
     // test coimputeBresenham
     auto points = line::coimputeBresenham(0, 0, -5, 0);
@@ -203,8 +384,8 @@ int main(int argc, char *argv[]) {
 
     // test Eigen SVD
     Eigen::Matrix3f M; // input matrix
-    M <<        0,         0,        0, 
-        -0.660054, -0.510275, 0.651784,   
+    M <<        0,         0,        0,
+        -0.660054, -0.510275, 0.651784,
          0.631292,  0.154421,  0.80545;
 
     Eigen::Matrix3f U; // save for comparision
@@ -243,14 +424,14 @@ int main(int argc, char *argv[]) {
         assert((V - svd.matrixV()).norm() < 1e-5);
     }
 
-    
+
 
 
     // test angle from std
     double p_x = 0;
     double p_y = 0;
 
-    // I 
+    // I
     double p1_x = 1;
     double p1_y = 3;
     double dis_p1_p = std::sqrt((p1_x - p_x) * (p1_x - p_x) + (p1_y - p_y) * (p1_y - p_y));
@@ -286,7 +467,7 @@ int main(int argc, char *argv[]) {
     // -y-axis
     double p8_x = 0;
     double p8_y = -1;
-    
+
 
     // double theta1 = std::asin((p1_x - p_x) / dis_p1_p);
     // double theta2 = M_PI + std::asin((p2_x - p_x) / dis_p2_p);
@@ -297,46 +478,46 @@ int main(int argc, char *argv[]) {
     // debugger::debugOutput("theta3: ", theta3, 5);
     // debugger::debugOutput("theta4: ", theta4, 5);
 
-    debugger::debugOutput("theta1 from pi function: ", 
+    debugger::debugOutput("theta1 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p1_x, p1_y), 5);
-    debugger::debugOutput("theta2 from pi function: ", 
+    debugger::debugOutput("theta2 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p2_x, p2_y), 5);
-    debugger::debugOutput("theta3 from pi function: ", 
+    debugger::debugOutput("theta3 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p3_x, p3_y), 5);
-    debugger::debugOutput("theta4 from pi function: ", 
+    debugger::debugOutput("theta4 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p4_x, p4_y), 5);
 
-    debugger::debugOutput("theta5 from pi function: ", 
+    debugger::debugOutput("theta5 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p5_x, p5_y), 5);
-    debugger::debugOutput("theta6 from pi function: ", 
+    debugger::debugOutput("theta6 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p6_x, p6_y), 5);
-    debugger::debugOutput("theta7 from pi function: ", 
+    debugger::debugOutput("theta7 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p7_x, p7_y), 5);
-    debugger::debugOutput("theta8 from pi function: ", 
+    debugger::debugOutput("theta8 from pi function: ",
             angle_between_two_points_and_x_axis_pi(p_x, p_y, p8_x, p8_y), 5);
 
-    debugger::debugOutput("theta1 from 2pi function: ", 
+    debugger::debugOutput("theta1 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p1_x, p1_y), 5);
-    debugger::debugOutput("theta2 from 2pi function: ", 
+    debugger::debugOutput("theta2 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p2_x, p2_y), 5);
-    debugger::debugOutput("theta3 from 2pi function: ", 
+    debugger::debugOutput("theta3 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p3_x, p3_y), 5);
-    debugger::debugOutput("theta4 from 2pi function: ", 
+    debugger::debugOutput("theta4 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p4_x, p4_y), 5);
-    
-    debugger::debugOutput("theta5 from 2pi function: ", 
+
+    debugger::debugOutput("theta5 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p5_x, p5_y), 5);
-    debugger::debugOutput("theta6 from 2pi function: ", 
+    debugger::debugOutput("theta6 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p6_x, p6_y), 5);
-    debugger::debugOutput("theta7 from 2pi function: ", 
+    debugger::debugOutput("theta7 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p7_x, p7_y), 5);
-    debugger::debugOutput("theta8 from 2pi function: ", 
+    debugger::debugOutput("theta8 from 2pi function: ",
             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p8_x, p8_y), 5);
 
 
     exit(0);
 
-    
+
     // publishers
     ros::Publisher map_pub = nh.advertise<grid_map_msgs::GridMap>(
             "world_map", 1, true);
@@ -344,22 +525,22 @@ int main(int argc, char *argv[]) {
             "local_map", 1, true);
     // ros::Publisher debug_pub = nh.advertise<grid_map_msgs::GridMap>(
     //         "debug", 1, true);
-    ros::Publisher path_pub = 
+    ros::Publisher path_pub =
         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("path_points", 1);
-    ros::Publisher search_pub = 
+    ros::Publisher search_pub =
         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("search_points", 1);
-    ros::Publisher marker_pub = 
+    ros::Publisher marker_pub =
         nh.advertise<visualization_msgs::MarkerArray>("results", 10);
 
 
     // markers
     visualization_msgs::Marker marker;
     visualization_msgs::MarkerArray marker_array;
-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
+    pcl::PointCloud<pcl::PointXYZI>::Ptr
         path_points (new pcl::PointCloud<pcl::PointXYZI>);
     path_points->header.frame_id = "odom";
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
+    pcl::PointCloud<pcl::PointXYZI>::Ptr
         search_points (new pcl::PointCloud<pcl::PointXYZI>);
     search_points->header.frame_id = "odom";
 
@@ -371,14 +552,14 @@ int main(int argc, char *argv[]) {
     double goal_bias = 0.2;
     double distance_threshold_for_sampling = 0;
 
-    pose_sampler_params_t pose_sampler_params(goal_bias, 
+    pose_sampler_params_t pose_sampler_params(goal_bias,
                                               distance_threshold_for_sampling);
 
     // rrt params
     size_t mode = 1;
     size_t num_samples = SIZE_MAX;
     double allowed_computation_time = 120; // in seconds
-    bool terminate_if_path = false; 
+    bool terminate_if_path = false;
 
 
     rrt_params_t rrt_params;
@@ -410,11 +591,11 @@ int main(int argc, char *argv[]) {
 
 
     LyapunovDistance* lyap_dist = new LyapunovDistance();
-    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map), 
+    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map),
                                        local_map_info);
     exit(-1);
     MapCost* map_cost = new MapCost(local_map, rrt_params.mode);
-    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map, 
+    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map,
                                                *map_cost, rrt_params.mode);
 
     // LyapunovDistance() is declared here for speed
@@ -469,10 +650,10 @@ int main(int argc, char *argv[]) {
     // load rrt
     // robot_state_t robot_state(fake_map->start);
     // CLFRRTStarPlanner* planner = new CLFRRTStarPlanner(
-    //         *(fake_map->map), length_of_local_map, 
+    //         *(fake_map->map), length_of_local_map,
     //         pose_6dof_t(fake_map->start), pose_6dof_t(fake_map->goal),
     //         robot_state, pose_sampler_params, rrt_params);
-    
+
     // grid_map::GridMap local_map({"test"});
     // local_map.setFrameId(planner->getLocalMap().getFrameId());
     // local_map["test"] = (planner->getLocalMap())["elevation"];
@@ -484,22 +665,22 @@ int main(int argc, char *argv[]) {
 
 
     // show targets
-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
-              "pose1", 
+    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
+              "pose1",
               0, 1, 0, 1, // color
               pose1, // pose
               0, 0 // count, time
               );
     marker_array.markers.push_back(marker);
-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
-              "pose2", 
+    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
+              "pose2",
               0, 1, 1, 1, // color
               pose2,
               0, 0 // count, time
               );
     marker_array.markers.push_back(marker);
-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
-              "pose3", 
+    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
+              "pose3",
               0, 1, 1, 1, // color
               pose3,
               0, 0 // count, time
@@ -527,18 +708,18 @@ int main(int argc, char *argv[]) {
         // search locally
         bool is_locally_free = true;
         grid_map::Position center(it.x, it.y);
-        
+
         if (local_map->local_map.atPosition("occupancy_map", center) == 1)
             is_locally_free = false;
         else
         {
             search_points->points.clear();
             for (grid_map::CircleIterator iterator(local_map->local_map, center, radius);
-                    !iterator.isPastEnd(); ++iterator) 
+                    !iterator.isPastEnd(); ++iterator)
             {
                 grid_map::Position position;
                 local_map->local_map.getPosition(*iterator, position);
-                if (local_map->local_map.at("occupancy_map", *iterator) == 1) 
+                if (local_map->local_map.at("occupancy_map", *iterator) == 1)
                 {
                     is_locally_free = false;
                     search_points->points.push_back(pcl::PointXYZI(
@@ -551,7 +732,7 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
-        pcl_conversions::toPCL(time, 
+        pcl_conversions::toPCL(time,
                                search_points->header.stamp);
         path_pub.publish(search_points);
         search_pub.publish(search_points);
@@ -568,14 +749,14 @@ int main(int argc, char *argv[]) {
                 (float) it.x, (float) it.y, 1.5, 255));
             debugger::debugTextOutput("[main] point free", 0);
         }
-        pcl_conversions::toPCL(time, 
+        pcl_conversions::toPCL(time,
                                path_points->header.stamp);
         path_pub.publish(path_points);
         // utils::pressEnterToContinue();
     }
 
-    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
-    //           "sample pose", 
+    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
+    //           "sample pose",
     //           0, 1, 1, 1, // color
     //           planner->sample_pose_testing,
     //           0, 0 // count, time
@@ -584,14 +765,14 @@ int main(int argc, char *argv[]) {
 
     // if (planner->getPathStatus())
     // {
-    //     std::vector<point2d_t<double>> path = planner->getPlannedPath(); 
-    //     std::vector<std::pair<pose_t, bool>> waypoints = 
-    //         planner->getPlannedWaypoints(); 
+    //     std::vector<point2d_t<double>> path = planner->getPlannedPath();
+    //     std::vector<std::pair<pose_t, bool>> waypoints =
+    //         planner->getPlannedWaypoints();
 
     //     for (const auto& it : path)
     //     {
-    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE, 
-    //         //         "planned path", 
+    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE,
+    //         //         "planned path",
     //         //         0, 0, 0, 0, // color
     //         //         it.x, it.y, 0, // location
     //         //         0, 0, 0, 1, // quaternion
@@ -607,8 +788,8 @@ int main(int argc, char *argv[]) {
     //     size_t count = 0;
     //     for (const auto& it : waypoints)
     //     {
-    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
-    //                 "waypoints", 
+    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
+    //                 "waypoints",
     //                 1, 1, 0, 1, // color
     //                 pose_t(it.first),
     //                 count, 0 // count, time
@@ -623,7 +804,7 @@ int main(int argc, char *argv[]) {
     while (nh.ok())
     {
         ros::Time time = ros::Time::now();
-        pcl_conversions::toPCL(time, 
+        pcl_conversions::toPCL(time,
                                path_points->header.stamp);
         path_pub.publish(path_points);
 
@@ -646,6 +827,6 @@ int main(int argc, char *argv[]) {
         ros::spinOnce();
         loop_rate.sleep();
     }
-    
+
     return 0;
 }

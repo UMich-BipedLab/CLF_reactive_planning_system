@@ -1,0 +1,2547 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f4c2634..e29e5c1 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
+   inekf_msgs
+   planner_msgs
+   grid_map_msgs
++  rviz_visual_tools
+ )
+ 
+ find_package(PCL 1.2 REQUIRED)
+@@ -65,6 +66,7 @@ catkin_package(
+ Eigen3
+   grid_map_ros  
+   grid_map_core
++  CATKIN_DEPENDS geometry_msgs
+ 
+ )
+ 
+@@ -131,6 +133,29 @@ add_dependencies(test_udp ${${PROJECT_NAME}_EXPORTED_TARGETS}
+ target_link_libraries(test_udp ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+ )
+ 
++add_executable(test_rviz_tool src/test_rviz_tool.cpp src/fake_map.cpp
++    src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
++    src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
++    src/map_operation.cpp
++    src/sample_pose.cpp src/pose.cpp 
++    src/lyapunov_path.cpp 
++    src/standalone_local_chart.cpp
++    src/standalone_omni_local_chart.cpp
++    src/standalone_omni_lyapunov_distance.cpp
++    src/omni_local_chart.cpp
++    src/utils/plotting.cpp
++    src/map_cost.cpp
++    src/communication.cpp
++    src/planner_info_to_controller_t.c
++    src/controller_info_to_planner_t.c
++    src/driver.cpp
++    src/control_commands.cpp
++    src/lie_group.cpp
++)
++add_dependencies(test_rviz_tool ${${PROJECT_NAME}_EXPORTED_TARGETS}
++    ${catkin_EXPORTED_TARGETS})
++target_link_libraries(test_rviz_tool ${catkin_LIBRARIES} ${PCL_LIBRARIES}
++)
+ 
+ add_executable(unit_test src/unit_test.cpp src/fake_map.cpp
+     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
+diff --git a/config/local_map.yaml b/config/local_map.yaml
+index 33c2c4a..4c672b3 100644
+--- a/config/local_map.yaml
++++ b/config/local_map.yaml
+@@ -7,9 +7,15 @@ local_map:
+   #    <often use on flat ground>
+   # 5: include mode1, mode2 and then assign a cell as unknown if any obstacle exists
+   #    between the cell and the robot
+-  mode: 5 
++  # 6: include mode1, mode2, and estimate planes
++  # 7: include mode1, mode2, eatiamte planes and publish terrain information 
++  mode: 6
+   obstacle_threshold: 0.3 # cost beyond this (0.5), will be considered obstacles
+   length: 6 # length of local map, including front and back (being too small will result in too much computation time) 
+   smooth_radius: 0.1 # 0.2, 2, 0.5
+   SDF_radius: 1 # use Spiral iterator and stop when find an obstalce (signed distance field)
+   nan_percentage_in_radius: 0.8 # 0.5, 0.8, 0.7
++
++
++
++
+diff --git a/config/plane.yaml b/config/plane.yaml
+new file mode 100644
+index 0000000..773a8f3
+--- /dev/null
++++ b/config/plane.yaml
+@@ -0,0 +1,29 @@
++###################
++# plane computation
++# #################
++#             --------------------------------     ^
++#            /                                /    |
++#           /                                /     |
++#          /                                /      | delta_x
++#         /                                /       |
++#        /                                /        |
++#        ---------------------------------         v
++#                     ...                                 -> num_planes
++#       --------------------------------     ^
++#      /                                /    |
++#     /                                /     |
++#    /                                /      | delta_x
++#   /            / \                 /       |
++#  /              | robot_pose      /        |
++#  ---------------------------------         v
++#
++#  <------------------------------->
++#               2*delta_y
++#
++#
++plane_params:
++  delta_x: 0.3
++  delta_y: 0.3
++  num_planes: 5
++
++
+diff --git a/include/clf_rrt.h b/include/clf_rrt.h
+index 24210f0..48b8a4e 100644
+--- a/include/clf_rrt.h
++++ b/include/clf_rrt.h
+@@ -251,6 +251,17 @@ private:
+ 
+ 
+ public:
++    CLFRRTStarPlanner(const grid_map::GridMap& map, 
++                      const local_map_params_t& local_map_params,
++                      const pose_t& start_pose, 
++                      const pose_t& goal_pose,
++                      robot_state_t& robot_state, 
++                      pose_sampler_params_t& pose_sampler_params,
++                      rrt_params_t& rrt_params, 
++                      cost_params_t& cost_map_params,
++                      lyapunov_distance_params_t& lyap_dist_params,
++                      const terrain_plane_params_t& terrain_palne_params);
++
+     CLFRRTStarPlanner(const grid_map::GridMap& map, 
+                       const local_map_params_t& local_map_params,
+                       const pose_t& start_pose, 
+diff --git a/include/control_commands.h b/include/control_commands.h
+index 34bda55..6c0b23d 100644
+--- a/include/control_commands.h
++++ b/include/control_commands.h
+@@ -36,6 +36,8 @@
+ #include "point.h"
+ #include "inekf_msgs/State.h"
+ #include "planner_msgs/State.h"
++#include "utils/plane.h"
++
+ 
+ 
+ namespace bipedlab
+@@ -79,6 +81,12 @@ planner_msgs::State
+ convertToPlannerMsg(const planner_info_to_controller_t& data,
+                     const ros::Time& time,
+                     const std::string& frame_id);
++planner_msgs::State
++convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data,
++        const std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_plane_ptr,
++        const ros::Time& time,
++        const std::string& frame_id);
++
+ 
+ 
+ 
+diff --git a/include/driver.h b/include/driver.h
+index 8ed1235..2949091 100644
+--- a/include/driver.h
++++ b/include/driver.h
+@@ -73,6 +73,8 @@
+ 
+ #include "inekf_msgs/State.h"
+ #include "planner_msgs/State.h"
++#include "rviz_visual_tools/rviz_visual_tools.h"
++
+ 
+ 
+ // #include <stdio.h>
+@@ -392,11 +394,17 @@ private:
+     ros::Publisher rrt_path_pub_; // publish path from the rrt 
+     ros::Publisher planner_path_pub_; // publish path from the planner
+     ros::Publisher planner_command_pub_; // publish path from the planner
++    // ros::Publisher planner_terrain_pub_; // publish terrain_info from the planner
+     ros::Publisher trajectory_pub_; // publish robot trajectory 
+     ros::Publisher marker_pub_;
+     ros::Publisher marker_array_pub_;
+     double marker_lifetime_;
+ 
++
++    // rviz tool
++    rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
++
++
+     // ros::Publisher frontier_publisher_;
+     // ros::Publisher side_walk_publisher_;
+     
+@@ -507,6 +515,8 @@ private:
+     goal_searching_for_planner_t goal_searching_;
+     goal_selection_for_robot_t goal_selection_;
+     communication_t udp_info_;
++    terrain_plane_params_t terrain_plane_params_;
++
+ 
+ 
+     int is_exploration_;
+diff --git a/include/local_map.h b/include/local_map.h
+index b048377..48b8ab6 100644
+--- a/include/local_map.h
++++ b/include/local_map.h
+@@ -37,6 +37,7 @@
+ 
+ #include "pose.h"
+ #include "robot_state.h"
++#include "utils/plane.h"
+ #include "cost_params_t.h"
+ #include "utils/debugger.h"
+ 
+@@ -66,6 +67,16 @@ typedef struct local_map_info
+         mode(mode), obstacle_threshold(obstacle_threshold), length(length) { }
+ } local_map_params_t;
+     
++
++typedef struct terrain_plane_params
++{
++    double delta_x;
++    double delta_y;
++    int num_planes;
++    terrain_plane_params(void): delta_x(0.3), delta_y(0.3), num_planes(5) { }
++} terrain_plane_params_t;
++
++
+ class LocalMap
+ {
+ private:
+@@ -73,12 +84,20 @@ private:
+     const grid_map::GridMap* map_;
+     const pose_t* current_pose_;
+     local_map_params_t local_map_info_;
++    terrain_plane_params_t terrain_plane_params_;
++    std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_ptr_;
++
+     
+ 
+ public:
+     LocalMap(const pose_t* current_pose, 
+              const grid_map::GridMap* map, 
+-             const local_map_params_t& local_map_info_);
++             const local_map_params_t& local_map_info,
++             const terrain_plane_params_t& terrain_plane_params);
++
++    LocalMap(const pose_t* current_pose, 
++             const grid_map::GridMap* map, 
++             const local_map_params_t& local_map_info);
+ 
+     bool isNeighborObstacleFree(
+             const double& x, const double& y, const double& radius = 0.1) const;
+@@ -86,6 +105,8 @@ public:
+ 
+     void updateLocalMap(const pose_t& current_pose);
+     void printMapAddress(void) { debugger::debugOutput("[In LocalMap()] &(global_map_ in Planner == map_): ", map_, 5);};
++    std::shared_ptr<std::vector<plane::terrain_info_t>> getTerrainInfo(void) const { return terrain_ptr_; };
++
+ 
+     grid_map::GridMap local_map;
+     // grid_map::GridMap* local_map_ptr;
+diff --git a/include/map_operation.h b/include/map_operation.h
+index d6273f9..d03c5a0 100644
+--- a/include/map_operation.h
++++ b/include/map_operation.h
+@@ -29,6 +29,7 @@
+  */
+ #include <grid_map_ros/grid_map_ros.hpp>
+ #include <grid_map_msgs/GridMap.h>
++#include "utils/plane.h"
+ #include "pose.h"
+ 
+ 
+@@ -147,6 +148,32 @@ void assignUnknownBehindObstacles(grid_map::GridMap& map,
+         const std::string compute_on_layer,
+         const std::string apply_to_layer);
+ 
++std::shared_ptr<std::vector<plane::terrain_info_t>>
++averageMapFilteringAndcomputeTerrainPlaneInformation(grid_map::GridMap& map,
++        const grid_map::Size& gridMapSize,
++        const double filterRadius,
++        const std::string apply_to_layer,
++        std::string output_layer,
++        const double percentage, // larger, the more be corrected
++        const double nan_value,
++        const pose_t& robot_pose,
++        const double delta_x,
++        const double delta_y,
++        const double num_planes);
++
++std::shared_ptr<std::vector<plane::terrain_info_t>>
++averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
++        grid_map::GridMap& map,
++        const grid_map::Size& gridMapSize,
++        const double filterRadius,
++        const std::string apply_to_layer,
++        std::string output_layer,
++        const double percentage, // larger, the more be corrected
++        const double nan_value,
++        const pose_t& robot_pose,
++        const double delta_x,
++        const double delta_y,
++        const double num_planes);
+ 
+ 
+     
+diff --git a/include/terrain_friction.h b/include/terrain_friction.h
+new file mode 100644
+index 0000000..851b1ab
+--- /dev/null
++++ b/include/terrain_friction.h
+@@ -0,0 +1,35 @@
++#ifndef TERRAIN_FRICTION_H
++#define TERRAIN_FRICTION_H
++
++namespace bipedlab
++{
++namespace terrain_friction
++{
++    constexpr float terrain_friction[] = {
++        1,  // 0: road
++        1, // 1: sidewalk
++        1, // 2: terrain
++        1, // 3: bulding
++        1, // 4: vegetation
++        1, // 5: walkable
++    };
++
++
++// struct EL_TABLE
++// {
++//    constexpr EL_TABLE() : values()
++//    {
++//       for (auto i = 0; i < 32; ++i) {
++//          values[i] = tan(el[i]*M_PI/180);
++//       }
++//    }
++// 
++//    int values[32];
++// };
++// 
++// constexpr EL_TABLE EL_TAN = EL_TABLE();
++
++} // namespace terrain_friction
++} // namespace BipedLab
++
++#endif
+diff --git a/include/utils/line.h b/include/utils/line.h
+index e58a0e8..e5298a4 100644
+--- a/include/utils/line.h
++++ b/include/utils/line.h
+@@ -200,13 +200,7 @@ namespace line
+         
+         return points;
+     }
+-
+-
+-
+-
+-    
+ } /* line */ 
+-    
+ } /* bipedlab */ 
+ 
+ 
+diff --git a/include/utils/plane.h b/include/utils/plane.h
+new file mode 100644
+index 0000000..bd1580e
+--- /dev/null
++++ b/include/utils/plane.h
+@@ -0,0 +1,209 @@
++/* Copyright (C) 2013-2020, The Regents of The University of Michigan.
++ * All rights reserved.
++ * This software was developed in the Biped Lab (https://www.biped.solutions/)
++ * under the direction of Jessy Grizzle, grizzle@umich.edu. This software may
++ * be available under alternative licensing terms; contact the address above.
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ * 1. Redistributions of source code must retain the above copyright notice, this
++ *    list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ *    this list of conditions and the following disclaimer in the documentation
++ *    and/or other materials provided with the distribution.
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
++ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
++ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ * The views and conclusions contained in the software and documentation are those
++ * of the authors and should not be interpreted as representing official policies,
++ * either expressed or implied, of the Regents of The University of Michigan.
++ *
++ * AUTHOR: Bruce JK Huang (bjhuang@umich.edu)
++ * WEBSITE: https://www.BrucebotStudio.com/
++ */
++#pragma once
++
++#ifndef PLANE_H
++#define PLANE_H 
++
++#include <cmath>
++#include <utility> // pair
++#include <memory> // shared_ptr
++#include <float.h> // FLT_MAX
++#include <eigen3/Eigen/Dense>
++#include <eigen3/Eigen/QR>
++#include "point.h"
++#include "pose.h"
++
++namespace bipedlab
++{
++namespace plane
++{
++    // PLANE REPRESENTATION 
++    //          normal_vector
++    //               \
++    //                \
++    //       ----------\---------------------     
++    //      /           \               o    /    
++    //     /                   fixed_point  /     
++    //    /                                /     
++    //   /                                /       
++    //  /                                /        
++    //  ---------------------------------         
++    //
++    struct plane_t
++    {
++        // normal vector zof this plane
++        Eigen::Vector3f normal_vector; // x, y, z
++
++        // a point on the plane
++        Eigen::Vector3f fixed_point; // x, y, z
++
++
++        plane_t(const Eigen::Vector3f &normal_vector, 
++                const Eigen::Vector3f &fixed_point):
++                normal_vector(normal_vector), fixed_point(fixed_point) { }
++
++        plane_t(const plane_t &copy):
++                normal_vector(copy.normal_vector), fixed_point(copy.fixed_point) { }
++
++        plane_t(void):
++                normal_vector(Eigen::Vector3f::Zero(3)), 
++                fixed_point(Eigen::Vector3f::Zero(3)) { }
++
++        std::vector<float>
++            getPlaneCoefficients(void) 
++        {
++            return std::vector<float>{this->normal_vector(0), this->normal_vector(1), 
++                                 this->normal_vector(2), this->fixed_point(2)};
++        }
++
++        void print(void) {
++            std::cout << "normal_vector: \n" << this->normal_vector << std::endl;
++            std::cout << "fixed_point: \n" << this->fixed_point << std::endl;
++        }
++        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
++    };
++
++
++    typedef struct terrain
++    {
++        double terrain_type;
++        double probability;
++        double friction;
++
++        terrain(void) : terrain_type(-1), probability(-1), friction(-1) { }
++    } terrain_t;
++
++    // TERRAIN PLANE REPRESENTATION 
++    //          normal_vector
++    //               \
++    //                \
++    //       ----------\---------------------     ^
++    //      /           \               o    /    |
++    //     /                   fixed_point  /     |
++    //    /                                /      | length
++    //   /            / \                 /       |
++    //  /              | robot_pose      /        |
++    //  ---------------------------------         v
++    //
++    //  <------------------------------->
++    //               width
++    // 
++    // 
++    struct terrain_info_t : plane_t
++    {
++        // length of the plane (extending from robot pose toward its heading
++        // direction)
++        double length;
++
++        // width of the plane (extending from robot pose toward perpendicularly 
++        // toward it heading directing)
++        double width;
++
++        // robot pose when computing this plane
++        pose_t robot_pose;
++
++        // terrain information
++        terrain_t terrain;
++
++        // points
++        Eigen::MatrixXf points;
++
++        terrain_info_t(const Eigen::Vector3f &normal_vector, 
++                        const Eigen::Vector3f &fixed_point,
++                        const double &length, const double &width,
++                        const pose_t &robot_pose):
++                plane_t(normal_vector, fixed_point),
++                length(length), width(width), robot_pose(robot_pose)
++        { }
++
++        terrain_info_t(const plane_t &plane,
++                        const double &length, const double &width,
++                        const pose_t &robot_pose):
++                plane_t(plane),
++                length(length), width(width), robot_pose(robot_pose)
++        { }
++
++        terrain_info_t(void): plane_t(), length(0), width(0), robot_pose()
++        {
++            // std::cout << "In terrain_plane_t default constructor\n";
++        }
++
++        // terrain_plane_t(const plane_t& copy) {
++        //     std::cout << "In terrain_plane_t copy constructor\n";
++        // }
++
++        terrain_info_t& operator=(const plane_t& copy) {
++            this->normal_vector = copy.normal_vector;
++            this->fixed_point = copy.fixed_point;
++            return *this;
++        }
++
++        void print(void) {
++            std::cout << "normal_vector: \n" << this->normal_vector << std::endl;
++            std::cout << "fixed_point: \n" << this->fixed_point << std::endl;
++            std::cout << "(l, w): " << this->length << ", " << this->width << std::endl;
++            std::cout << "robot_pose: "; this->robot_pose.print(); 
++        }
++
++        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
++    };
++
++
++    // Points should be 3 x m format, where m is the number of points
++    inline
++    std::shared_ptr<plane_t> fitPlaneViaLeastSquares(const Eigen::MatrixXf &points)
++    {
++        // points = [xs
++        //           ys
++        //           zs]
++        std::shared_ptr<plane_t> fitted_plane(new plane_t);
++        size_t num_points = points.cols();  
++        Eigen::MatrixXf A = Eigen::MatrixXf::Ones(num_points, 3); // 1s, xs, ys
++        A.col(1) = points.row(0); // xs
++        A.col(2) = points.row(1); // ys
++        // std::cout << "A: \n"  << A << std::endl;
++        Eigen::VectorXf z = points.row(2).transpose().eval(); // zs
++        Eigen::MatrixXf b = A.bdcSvd(Eigen::ComputeThinU | 
++                     Eigen::ComputeThinV).solve(z);
++        // std::cout << "b: \n"  << b << std::endl;
++
++        // b1 * x + b2 * y - z + b0 = 0
++        fitted_plane->normal_vector = Eigen::Vector3f(b(1), b(2), -1);
++        fitted_plane->fixed_point = Eigen::Vector3f(0, 0, b(0));
++
++        return fitted_plane;
++    }
++
++
++
++} /* plane */ 
++} /* bipedlab */ 
++#endif /* ifndef PLANE_H */
+diff --git a/launch/FRB_test_offline.launch b/launch/FRB_test_offline.launch
+index 4acb138..a884e56 100644
+--- a/launch/FRB_test_offline.launch
++++ b/launch/FRB_test_offline.launch
+@@ -8,6 +8,7 @@
+     <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
+     <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
+     <rosparam file="$(find cassie_planning)/config/robot_params.yaml" command="load" />
++    <rosparam file="$(find cassie_planning)/config/plane.yaml" command="load" />
+ 
+ 
+     <!-- log commands (saved in ~/.ros folder)-->
+diff --git a/launch/FRB_test_online.launch b/launch/FRB_test_online.launch
+index 2d4ce1a..a055f98 100644
+--- a/launch/FRB_test_online.launch
++++ b/launch/FRB_test_online.launch
+@@ -8,6 +8,8 @@
+     <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
+     <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
+     <rosparam file="$(find cassie_planning)/config/robot_params.yaml" command="load" />
++    <rosparam file="$(find cassie_planning)/config/plane.yaml" command="load" />
++
+ 
+ 
+     <!-- log commands (saved in ~/.ros folder)-->
+diff --git a/rviz/FRB_demo.rviz b/rviz/FRB_demo.rviz
+new file mode 100644
+index 0000000..645b64d
+--- /dev/null
++++ b/rviz/FRB_demo.rviz
+@@ -0,0 +1,610 @@
++Panels:
++  - Class: rviz/Displays
++    Help Height: 0
++    Name: Displays
++    Property Tree Widget:
++      Expanded:
++        - /Markers1
++        - /Markers1/Namespaces1
++      Splitter Ratio: 0.5497512221336365
++    Tree Height: 1154
++  - Class: rviz/Selection
++    Name: Selection
++  - Class: rviz/Tool Properties
++    Expanded:
++      - /2D Pose Estimate1
++      - /2D Nav Goal1
++      - /Publish Point1
++    Name: Tool Properties
++    Splitter Ratio: 0.5886790156364441
++  - Class: rviz/Views
++    Expanded:
++      - /Current View1
++    Name: Views
++    Splitter Ratio: 0.5
++  - Class: rviz/Time
++    Experimental: false
++    Name: Time
++    SyncMode: 0
++    SyncSource: ""
++  - Class: rviz/Help
++    Name: Help
++Preferences:
++  PromptSaveOnExit: true
++Toolbars:
++  toolButtonStyle: 2
++Visualization Manager:
++  Class: ""
++  Displays:
++    - Alpha: 0.5
++      Cell Size: 1
++      Class: rviz/Grid
++      Color: 160; 160; 164
++      Enabled: true
++      Line Style:
++        Line Width: 0.029999999329447746
++        Value: Lines
++      Name: Grid
++      Normal Cell Count: 0
++      Offset:
++        X: 0
++        Y: 0
++        Z: 0
++      Plane: XY
++      Plane Cell Count: 100
++      Reference Frame: <Fixed Frame>
++      Value: true
++    - Alpha: 1
++      Autocompute Intensity Bounds: true
++      Autocompute Value Bounds:
++        Max Value: 10
++        Min Value: -10
++        Value: true
++      Axis: Z
++      Channel Name: intensity
++      Class: rviz/PointCloud2
++      Color: 255; 255; 255
++      Color Transformer: Intensity
++      Decay Time: 0
++      Enabled: false
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 13.703908920288086
++      Min Color: 0; 0; 0
++      Min Intensity: 3.788376125157811e-5
++      Name: CostMap
++      Position Transformer: XYZ
++      Queue Size: 10
++      Selectable: true
++      Size (Pixels): 3
++      Size (m): 0.05000000074505806
++      Style: Spheres
++      Topic: /height_point
++      Unreliable: false
++      Use Fixed Frame: true
++      Use rainbow: true
++      Value: false
++    - Class: rviz/Axes
++      Enabled: true
++      Length: 1
++      Name: Axes
++      Radius: 0.10000000149011612
++      Reference Frame: <Fixed Frame>
++      Value: true
++    - Class: rviz/MarkerArray
++      Enabled: true
++      Marker Topic: /planner/MarkerArray
++      Name: Markers
++      Namespaces:
++        dir_for_robot (b): false
++        goal_for_robot (c): false
++        goal_searching: false
++        goal_searching_segments-0: true
++        goal_searching_segments-1: true
++        robot_pose: false
++        rrt_goal: false
++        rrt_samples: false
++        rrt_start: true
++        rrt_waypoints: true
++        selected_searching_goal: true
++      Queue Size: 100
++      Value: true
++    - Alpha: 0.5
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: elevation_map
++      Color Transformer: GridMapLayer
++      Enabled: true
++      Height Layer: elevation_map
++      Height Transformer: Layer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: WorldElevation
++      Show Grid Lines: true
++      Topic: /planner/world_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: true
++    - Alpha: 0.20000000298023224
++      Autocompute Intensity Bounds: false
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: traversability_map
++      Color Transformer: GridMapLayer
++      Enabled: false
++      Height Layer: traversability_map
++      Height Transformer: Layer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 0; 0; 0
++      Max Intensity: 1
++      Min Color: 255; 255; 255
++      Min Intensity: 0
++      Name: WorldTraversability
++      Show Grid Lines: true
++      Topic: /planner/world_map
++      Unreliable: false
++      Use Rainbow: false
++      Value: false
++    - Alpha: 0.699999988079071
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: elevation_map
++      Color Transformer: GridMapLayer
++      Enabled: false
++      Height Layer: elevation_map
++      Height Transformer: Layer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: LocalElevation
++      Show Grid Lines: true
++      Topic: /planner/local_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Alpha: 0.8999999761581421
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: filtered_elevation_map
++      Color Transformer: GridMapLayer
++      Enabled: false
++      Height Layer: filtered_elevation_map
++      Height Transformer: GridMapLayer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: LocalMapFiltered
++      Show Grid Lines: true
++      Topic: /planner/local_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Alpha: 0.699999988079071
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: filtered_slope
++      Color Transformer: GridMapLayer
++      Enabled: false
++      Height Layer: filtered_slope
++      Height Transformer: ""
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: LocalSlope
++      Show Grid Lines: true
++      Topic: /planner/local_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: false
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: occupancy_map
++      Color Transformer: IntensityLayer
++      Enabled: false
++      Height Layer: occupancy_map
++      Height Transformer: Layer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 0; 0; 0
++      Max Intensity: 1
++      Min Color: 255; 255; 255
++      Min Intensity: 0
++      Name: LocalOccup
++      Show Grid Lines: true
++      Topic: /planner/local_map
++      Unreliable: false
++      Use Rainbow: false
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: true
++      Autocompute Value Bounds:
++        Max Value: 10
++        Min Value: -10
++        Value: true
++      Axis: Z
++      Channel Name: intensity
++      Class: rviz/PointCloud2
++      Color: 255; 255; 255
++      Color Transformer: Intensity
++      Decay Time: 0
++      Enabled: false
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 0
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: PlannerPathPoints
++      Position Transformer: XYZ
++      Queue Size: 10
++      Selectable: true
++      Size (Pixels): 3
++      Size (m): 0.20000000298023224
++      Style: Flat Squares
++      Topic: /planner/planner_path_points
++      Unreliable: false
++      Use Fixed Frame: true
++      Use rainbow: true
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: false
++      Autocompute Value Bounds:
++        Max Value: 10
++        Min Value: -10
++        Value: true
++      Axis: Z
++      Channel Name: intensity
++      Class: rviz/PointCloud2
++      Color: 255; 255; 255
++      Color Transformer: Intensity
++      Decay Time: 0
++      Enabled: false
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 1
++      Min Color: 0; 0; 0
++      Min Intensity: 1
++      Name: RRTPathPoints
++      Position Transformer: XYZ
++      Queue Size: 10
++      Selectable: true
++      Size (Pixels): 5
++      Size (m): 0.10000000149011612
++      Style: Points
++      Topic: /planner/rrt_path_points
++      Unreliable: false
++      Use Fixed Frame: true
++      Use rainbow: false
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: elevation_map
++      Color Transformer: IntensityLayer
++      Enabled: false
++      Height Layer: elevation_map
++      Height Transformer: ""
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: MapPublisherEle
++      Show Grid Lines: true
++      Topic: /fake_map_publisher/multi_layer_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: filtered_elevation_map
++      Color Transformer: GridMapLayer
++      Enabled: false
++      Height Layer: filtered_elevation_map
++      Height Transformer: ""
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: MapPublisherFiltered
++      Show Grid Lines: true
++      Topic: /fake_map_publisher/multi_layer_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: true
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: traversability_map
++      Color Transformer: IntensityLayer
++      Enabled: false
++      Height Layer: traversability_map
++      Height Transformer: ""
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 10
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: MapPublisherTrav
++      Show Grid Lines: true
++      Topic: /fake_map_publisher/multi_layer_map
++      Unreliable: false
++      Use Rainbow: false
++      Value: false
++    - Alpha: 1
++      Buffer Length: 1
++      Class: rviz/Path
++      Color: 255; 0; 0
++      Enabled: true
++      Head Diameter: 0.30000001192092896
++      Head Length: 0.20000000298023224
++      Length: 0.30000001192092896
++      Line Style: Lines
++      Line Width: 0.029999999329447746
++      Name: Path
++      Offset:
++        X: 0
++        Y: 0
++        Z: 0
++      Pose Color: 0; 255; 0
++      Pose Style: Arrows
++      Radius: 0.029999999329447746
++      Shaft Diameter: 0.20000000298023224
++      Shaft Length: 0.10000000149011612
++      Topic: /planner/robot_trajectory
++      Unreliable: false
++      Value: true
++    - Class: rviz/MarkerArray
++      Enabled: false
++      Marker Topic: /fake_robot_publisher/fake_robot
++      Name: FakeRobot
++      Namespaces:
++        {}
++      Queue Size: 100
++      Value: false
++    - Alpha: 0.30000001192092896
++      Autocompute Intensity Bounds: false
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: elevation_map
++      Color Transformer: ""
++      Enabled: false
++      Height Layer: elevation_map
++      Height Transformer: GridMapLayer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 0.699999988079071
++      Min Color: 0; 0; 0
++      Min Intensity: -0.800000011920929
++      Name: GridMap
++      Show Grid Lines: true
++      Topic: /fake_map_publisher/multi_layer_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: false
++    - Class: rviz/MarkerArray
++      Enabled: false
++      Marker Topic: /debug_results
++      Name: DebugMarker
++      Namespaces:
++        {}
++      Queue Size: 100
++      Value: false
++    - Alpha: 1
++      Autocompute Intensity Bounds: false
++      Class: grid_map_rviz_plugin/GridMap
++      Color: 200; 200; 200
++      Color Layer: elevation
++      Color Transformer: IntensityLayer
++      Enabled: true
++      Height Layer: elevation
++      Height Transformer: Layer
++      History Length: 1
++      Invert Rainbow: false
++      Max Color: 255; 255; 255
++      Max Intensity: 2
++      Min Color: 0; 0; 0
++      Min Intensity: 0
++      Name: GridMap
++      Show Grid Lines: true
++      Topic: /elevation_mapping/elevation_map
++      Unreliable: false
++      Use Rainbow: true
++      Value: true
++    - Class: rviz/TF
++      Enabled: true
++      Frame Timeout: 15
++      Frames:
++        All Enabled: true
++        camera_color_optical_frame:
++          Value: true
++        camera_depth_optical_frame:
++          Value: true
++        cassie/back_camera:
++          Value: true
++        cassie/front_camera:
++          Value: true
++        cassie/left_hip:
++          Value: true
++        cassie/left_knee:
++          Value: true
++        cassie/left_pelvis_abduction:
++          Value: true
++        cassie/left_pelvis_rotation:
++          Value: true
++        cassie/left_shin:
++          Value: true
++        cassie/left_tarsus:
++          Value: true
++        cassie/left_thigh:
++          Value: true
++        cassie/left_toe:
++          Value: true
++        cassie/pelvis:
++          Value: true
++        cassie/right_hip:
++          Value: true
++        cassie/right_knee:
++          Value: true
++        cassie/right_pelvis_abduction:
++          Value: true
++        cassie/right_pelvis_rotation:
++          Value: true
++        cassie/right_shin:
++          Value: true
++        cassie/right_tarsus:
++          Value: true
++        cassie/right_thigh:
++          Value: true
++        cassie/right_toe:
++          Value: true
++        cassie/tilted_lidar:
++          Value: true
++        cassie/top_lidar:
++          Value: true
++        cassie/torso:
++          Value: true
++        cassie/vectorNav:
++          Value: true
++        odom:
++          Value: true
++        velodyne:
++          Value: true
++      Marker Scale: 1
++      Name: TF
++      Show Arrows: true
++      Show Axes: true
++      Show Names: true
++      Tree:
++        odom:
++          cassie/pelvis:
++            cassie/left_pelvis_abduction:
++              cassie/left_pelvis_rotation:
++                cassie/left_hip:
++                  cassie/left_thigh:
++                    cassie/left_knee:
++                      cassie/left_shin:
++                        cassie/left_tarsus:
++                          cassie/left_toe:
++                            {}
++            cassie/right_pelvis_abduction:
++              cassie/right_pelvis_rotation:
++                cassie/right_hip:
++                  cassie/right_thigh:
++                    cassie/right_knee:
++                      cassie/right_shin:
++                        cassie/right_tarsus:
++                          cassie/right_toe:
++                            {}
++            cassie/torso:
++              cassie/back_camera:
++                {}
++              cassie/front_camera:
++                {}
++              cassie/tilted_lidar:
++                {}
++              cassie/top_lidar:
++                velodyne:
++                  {}
++            cassie/vectorNav:
++              camera_color_optical_frame:
++                camera_depth_optical_frame:
++                  {}
++      Update Interval: 0
++      Value: true
++  Enabled: true
++  Global Options:
++    Background Color: 48; 48; 48
++    Default Light: true
++    Fixed Frame: odom
++    Frame Rate: 30
++  Name: root
++  Tools:
++    - Class: rviz/Interact
++      Hide Inactive Objects: true
++    - Class: rviz/MoveCamera
++    - Class: rviz/Select
++    - Class: rviz/FocusCamera
++    - Class: rviz/Measure
++    - Class: rviz/SetInitialPose
++      Theta std deviation: 0.2617993950843811
++      Topic: /initialpose
++      X std deviation: 0.5
++      Y std deviation: 0.5
++    - Class: rviz/SetGoal
++      Topic: /move_base_simple/goal
++    - Class: rviz/PublishPoint
++      Single click: true
++      Topic: /clicked_point
++  Value: true
++  Views:
++    Current:
++      Class: rviz/Orbit
++      Distance: 47.29016876220703
++      Enable Stereo Rendering:
++        Stereo Eye Separation: 0.05999999865889549
++        Stereo Focal Distance: 1
++        Swap Stereo Eyes: false
++        Value: false
++      Focal Point:
++        X: 6.694847106933594
++        Y: -12.338804244995117
++        Z: 0.3511914312839508
++      Focal Shape Fixed Size: false
++      Focal Shape Size: 0.05000000074505806
++      Invert Z Axis: false
++      Name: Current View
++      Near Clip Distance: 0.009999999776482582
++      Pitch: 1.5697963237762451
++      Target Frame: <Fixed Frame>
++      Value: Orbit (rviz)
++      Yaw: 2.369875907897949
++    Saved: ~
++Window Geometry:
++  Displays:
++    collapsed: false
++  Height: 1376
++  Help:
++    collapsed: false
++  Hide Left Dock: false
++  Hide Right Dock: true
++  QMainWindow State: 000000ff00000000fd000000040000000000000194000004c1fc0200000009fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006600fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000041000004c1000000df00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000800480065006c0070000000040b000000bd0000007a00ffffff000000010000010000000553fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003e00000553000000b200fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004430000003afc0100000002fb0000000800540069006d00650100000000000004430000029d00fffffffb0000000800540069006d00650100000000000004500000000000000000000002a8000004c100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
++  Selection:
++    collapsed: false
++  Time:
++    collapsed: false
++  Tool Properties:
++    collapsed: false
++  Views:
++    collapsed: true
++  Width: 1091
++  X: 1465
++  Y: 200
+diff --git a/src/clf_rrt.cpp b/src/clf_rrt.cpp
+index 330d23f..7c36468 100644
+--- a/src/clf_rrt.cpp
++++ b/src/clf_rrt.cpp
+@@ -42,6 +42,95 @@
+ 
+ namespace bipedlab 
+ {
++    CLFRRTStarPlanner::CLFRRTStarPlanner(
++            const grid_map::GridMap& global_map, // no need to keep local copy (LC)
++            const local_map_params_t& local_map_params,
++            const pose_t& start_pose, const pose_t& goal_pose, // need to keep LC 
++            robot_state_t& robot_state, // no need to keep LC
++            pose_sampler_params_t& pose_sampler_params,
++            rrt_params_t& rrt_params,
++            cost_params_t& map_cost_params,
++            lyapunov_distance_params_t& lyap_dist_params, 
++            const terrain_plane_params_t& terrain_plane_params) : 
++        global_map_(&global_map), 
++        start_pose_(start_pose), 
++        goal_pose_(goal_pose), 
++        robot_state_(robot_state),
++        rrt_params_(rrt_params),
++        lyap_dist_params_(lyap_dist_params),
++        total_seconds_spent_(0),
++        is_debugging_(2) // will save more data for visualization
++                        // 2: to show sampled poses
++                        // 3: to show nearby poses
++    { 
++        // std::cout << "[In CLFRRTStarPlanner()] &global_map = " << &global_map << std::endl;
++        // std::cout << "[In CLFRRTStarPlanner()] global_map_ = " << global_map_ << std::endl;
++
++        debugger::debugTextOutput("[CLFRRT] CLFRRTStarPlanner initializing...", 4);
++
++
++        // for (auto name : global_map.getLayers())
++        //     std::cout << "layer: " << name << std::endl;
++
++        local_map_ = new LocalMap(&start_pose_, global_map_, 
++                                  local_map_params, terrain_plane_params);
++        // std::cout << "[In CLFRRTStarPlanner()] global_map_ in Plannar == map_ of LocalMap: ";
++        // local_map_->printMapAddress();
++        // std::cout << std::endl;
++
++        // new_local_map_ = new LocalMap(start_pose_, global_map, length_of_local_map);
++        // new_local_map_ = *local_map_; 
++        // debug_local_map = local_map_->local_map;
++
++
++        sampling_ = new SamplePose(pose_sampler_params, 
++                                   local_map_, 
++                                   &goal_pose_,
++                                   &robot_state_);
++
++        map_cost_ = new MapCost(map_cost_params, local_map_, rrt_params_.mode);
++
++        // LyapunovDistance() is declared here for speed
++        // whichever class (lyapunovPath, CassieRRTTree) 
++        // wants to change the target pose of the local chart inside of 
++        // the LyapunovDistance(), CHANGE ON ITS OWN!
++        lyap_dist_ = new LyapunovDistance(lyap_dist_params_); 
++        lyap_path_ = new LyapunovPath(*lyap_dist_, *local_map_, *map_cost_, rrt_params_.mode);
++        rrt_tree_ = new CassieRRTTree(start_pose_, *lyap_dist_, *lyap_path_);
++
++
++        if (is_debugging_)
++        {
++            path_pub_ = 
++                nh_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("debug_path_points", 1);
++
++            marker_pub_ =
++                nh_.advertise<visualization_msgs::MarkerArray>("debug_results", 10);
++
++            debug_path_points_ = pcl::PointCloud<pcl::PointXYZI>::Ptr(new pcl::PointCloud<pcl::PointXYZI>);
++            debug_path_points_->header.frame_id = "map";
++        }
++
++        debugger::debugTextOutput("[CLFRRT] Classes in CLFRRTStarPlanner are "
++                                  "all initialized!", 5);
++
++        // debugger::debugTextOutput("[CLFRRT Constructor] testing sampling function... ", 0);
++        // bool dummy;
++        // sample_pose_testing = 
++        //     sampling_->sampleRandomPoseWithGoalBiasedWithinLocalMap(dummy);
++
++        // debugger::debugTextOutput("[CLFRRT] CLFRRT is running... ", 5);
++        // is_path_ = CLFRRTStarPlanner::findNewPath(
++        //         rrt_params_.num_samples, 
++        //         rrt_params_.allowed_computation_time, 
++        //         rrt_params_.terminate_if_path);
++        // debugger::debugOutput("[CLFRRT] has found a path? ", is_path_, 5);
++        // debugger::debugOutput("[CLFRRT] Cost:", minimum_cost_to_goal_, 5);
++        // debugger::debugOutput("[CLFRRT] points of path ", 
++        //         planned_path_.size(), 5);
++        // debugger::debugOutput("[CLFRRT] number of waypoints ", 
++        //         planned_waypoints_.size(), 5);
++    }
+     CLFRRTStarPlanner::CLFRRTStarPlanner(
+             const grid_map::GridMap& global_map, // no need to keep local copy (LC)
+             const local_map_params_t& local_map_params,
+diff --git a/src/control_commands.cpp b/src/control_commands.cpp
+index ebe8d2b..3e954eb 100644
+--- a/src/control_commands.cpp
++++ b/src/control_commands.cpp
+@@ -31,6 +31,8 @@
+ #include "utils/debugger.h"
+ #include "utils/utils.h"
+ #include "robot_state.h"
++#include <geometry_msgs/Pose.h>
++
+ 
+ namespace bipedlab
+ {
+@@ -372,5 +374,65 @@ convertToPlannerMsg(const planner_info_to_controller_t& data,
+     return state;
+ }
+ 
++planner_msgs::State
++convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data, 
++                    const std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_plane_ptr,
++                    const ros::Time& time,
++                    const std::string& frame_id)
++{
++    planner_msgs::State state;
++
++    state.header.stamp = time;
++    state.header.frame_id = frame_id;
++
++    state.behavior = (int) data.behavior;
++    state.velocity.x = data.velocity[0]; 
++    state.velocity.y = data.velocity[1]; 
++    state.velocity.z = data.velocity[2];  // omega
++
++
++    state.torso.roll = data.torso.roll;
++    state.torso.pitch = data.torso.pitch;
++    state.torso.yaw = data.torso.yaw;
++
++
++
++    // plane information
++    robot_state_t robot_state = robot_state_t(terrain_plane_ptr->at(0).robot_pose);
++    geometry_msgs::Pose geometry_pose;
++    geometry_pose.position = robot_state.inekf_state.position;
++    geometry_pose.orientation = robot_state.inekf_state.orientation;
++    for (int i = 0; i < terrain_plane_ptr->size(); ++i)
++    {
++        planner_msgs::Plane plane;
++        plane.normal_vector.x = terrain_plane_ptr->at(i).normal_vector(0);
++        plane.normal_vector.y = terrain_plane_ptr->at(i).normal_vector(1);
++        plane.normal_vector.z = terrain_plane_ptr->at(i).normal_vector(2);
++        plane.point.x = terrain_plane_ptr->at(i).fixed_point(0);
++        plane.point.y = terrain_plane_ptr->at(i).fixed_point(1);
++        plane.point.z = terrain_plane_ptr->at(i).fixed_point(2);
++        plane.pose = geometry_pose;
++        plane.delta_x = terrain_plane_ptr->at(i).length;
++        plane.delta_y = terrain_plane_ptr->at(i).width;
++        state.planes.push_back(plane);
++    }
++
++    // waypoints
++
++    // footplacement
++
++    // pose
++    state.pose.position.x = data.pose[0];
++    state.pose.position.y = data.pose[1];
++    state.pose.position.z = data.pose[2];
++
++    state.pose.orientation.w = data.pose[3];
++    state.pose.orientation.x = data.pose[4];
++    state.pose.orientation.y = data.pose[5];
++    state.pose.orientation.z = data.pose[6];
++
++    return state;
++}
++
+ } /* control_commands */ 
+ } /* bipedlab */ 
+diff --git a/src/driver.cpp b/src/driver.cpp
+index e0a5602..e089d1a 100644
+--- a/src/driver.cpp
++++ b/src/driver.cpp
+@@ -152,6 +152,14 @@ Driver::Driver(ros::NodeHandle& nh):
+         nh_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("planner_path_points", 1);
+     planner_command_pub_ = nh_.advertise<planner_msgs::State> ("planner_commands", 1);
+ 
++    // rviz tool
++    visual_tools_.reset(new rviz_visual_tools::RvizVisualTools(map_frame_,"/rviz_visual_markers"));
++    visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++
++
++    // planner_terrain_pub_ = nh_.advertise<planner_msgs::TerrainArray> ("planner_terrain", 1);
++
+     marker_pub_ = nh_.advertise<visualization_msgs::Marker>(
+             "visualization_marker", 10);
+     marker_array_pub_ = nh_.advertise<visualization_msgs::MarkerArray>(
+@@ -194,7 +202,8 @@ Driver::Driver(ros::NodeHandle& nh):
+     // std::cout << "[In driver.cpp before Planner()] &multi_layer_map_ = " << &multi_layer_map_ << std::endl;
+     planner_ = new CLFRRTStarPlanner(multi_layer_map_, local_map_params_,
+             robot_state_.pose, robot_state_.pose, robot_state_, 
+-            pose_sampler_params_, rrt_params_, cost_map_params_, lyap_dist_params_);
++            pose_sampler_params_, rrt_params_, cost_map_params_, lyap_dist_params_,
++            terrain_plane_params_);
+     // std::cout << "[In driver.cpp after Planner()] planner_->printGlobalMapCLFAddress():" << std::endl;
+     // planner_->printGlobalMapCLFAddress();
+     // std::cout << std::endl;
+@@ -1890,6 +1899,43 @@ void Driver::publishToRviz_()
+     rrt_path_pub_.publish(rrt_path_points);
+     planner_path_pub_.publish(planner_path_points);
+     trajectory_pub_.publish(robot_trajectory_);
++
++
++
++    // plane information 
++    // Clear messages
++    visual_tools_->deleteAllMarkers();
++    visual_tools_->enableBatchPublishing();
++
++    // publish plane information
++    std::shared_ptr<std::vector<plane::terrain_info_t>>
++        terrain_ptr = local_map_->getTerrainInfo();
++    for (int seg = 0; seg < terrain_plane_params_.num_planes; ++seg)
++    {
++        geometry_msgs::Vector3 scale = 
++            visual_tools_->getScale(rviz_visual_tools::MEDIUM);
++        std_msgs::ColorRGBA color = 
++            visual_tools_->getColorScale(
++                    (float) seg / terrain_plane_params_.num_planes);
++
++        for (int i = 0; i < terrain_ptr->at(seg).points.cols(); ++i)
++        {
++            visual_tools_->publishSphere(
++                    terrain_ptr->at(seg).points.col(i).cast<double>(),
++                    color, scale, "plane points");
++        }
++        std::vector<float> plane_coefficients =
++            terrain_ptr->at(seg).getPlaneCoefficients();
++        Eigen::Vector3d center = terrain_ptr->at(seg).points.rowwise().mean().cast<double>();
++        visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
++                plane_coefficients[1],
++                plane_coefficients[2],
++                plane_coefficients[3], center, color, 
++                terrain_plane_params_.delta_x, 2 * terrain_plane_params_.delta_y);
++    }
++    visual_tools_->trigger();
++
++
+ }
+ 
+ 
+@@ -2803,6 +2849,24 @@ bool Driver::getParameters_()
+     ros_utils::checkROSParam(nh_, "marker_lifetime", marker_lifetime_, 
+                           getNameOf(marker_lifetime_), title_name, received_all);
+ 
++    // terrain info parameters
++    ros_utils::checkROSParam(nh_, "plane_params/delta_x", 
++            terrain_plane_params_.delta_x, 
++            getNameOf(terrain_plane_params_) + "." + 
++            getNameOf(terrain_plane_params_.delta_x), 
++            title_name, received_all);
++    ros_utils::checkROSParam(nh_, "plane_params/delta_y", 
++            terrain_plane_params_.delta_y, 
++            getNameOf(terrain_plane_params_) + "." + 
++            getNameOf(terrain_plane_params_.delta_y), 
++            title_name, received_all);
++    ros_utils::checkROSParam(nh_, "plane_params/num_planes", 
++            terrain_plane_params_.num_planes, 
++            getNameOf(terrain_plane_params_) + "." + 
++            getNameOf(terrain_plane_params_.num_planes), 
++            title_name, received_all);
++
++
+ 
+     if (!received_all)
+     {
+diff --git a/src/local_map.cpp b/src/local_map.cpp
+index fc952b2..77517aa 100644
+--- a/src/local_map.cpp
++++ b/src/local_map.cpp
+@@ -34,6 +34,19 @@
+ 
+ namespace bipedlab
+ {
++LocalMap::LocalMap(const pose_t* current_pose, 
++                   const grid_map::GridMap* map, 
++                   const local_map_params_t& local_map_info,
++                   const terrain_plane_params_t& terrain_plane_params):
++    current_pose_(current_pose), 
++    map_(map), 
++    local_map_info_(local_map_info),
++    terrain_plane_params_(terrain_plane_params),
++    is_successful(false)
++    {
++        updateLocalMap(*current_pose);
++    }
++
+ LocalMap::LocalMap(const pose_t* current_pose, 
+                    const grid_map::GridMap* map, 
+                    const local_map_params_t& local_map_info):
+@@ -178,10 +191,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         this->local_map.setBasicLayers({"filtered_elevation_map"});
+     }
+ 
++
+     // smooth and slope (assign unknow = unknow_cost + robot.z)
+     if (local_map_info_.mode == 3)
+     {
+-
+         this->local_map.add("filtered_elevation_map", 0);
+         map_operation::averageNANFiltering(this->local_map, 
+                 this->local_map.getSize(),
+@@ -205,8 +218,9 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         this->local_map.setBasicLayers({"filtered_elevation_map"});
+     }
+ 
++
+     // smooth and use signed distnace to the cloest obstacles 
+-    // This do the smoothing first, computing SDF after computing obstalces
++    // This does the smoothing first, computing SDF after computing obstalces
+     if (local_map_info_.mode == 4)
+     {
+         this->local_map.add("filtered_elevation_map", 0);
+@@ -242,7 +256,56 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+     }
+ 
+ 
+-    // update occupancy map 
++    // smooth and plane computation 
++    if (local_map_info_.mode == 6)
++    {
++        this->local_map.add("filtered_elevation_map", 0);
++        terrain_ptr_ = 
++            map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
++                    this->local_map, 
++                    this->local_map.getSize(),
++                    this->local_map_info_.smooth_radius,
++                    "elevation_map", "", 
++                    local_map_info_.nan_percentage_in_radius, 
++                    local_map_info_.cost_params.unknown_cost,
++                    current_pose,
++                    terrain_plane_params_.delta_x,
++                    terrain_plane_params_.delta_y,
++                    terrain_plane_params_.num_planes);
++
++        // map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
++        size_t num_NAN = map_operation::checkNAN(this->local_map, 
++                "filtered_elevation_map");
++        debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
++        this->local_map.setBasicLayers({"filtered_elevation_map"});
++    }
++
++    // smooth, palne computation, and  terrain information 
++    if (local_map_info_.mode == 7)
++    {
++        this->local_map.add("filtered_elevation_map", 0);
++        terrain_ptr_ = 
++            map_operation::averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(
++                    this->local_map, 
++                    this->local_map.getSize(),
++                    this->local_map_info_.smooth_radius,
++                    "elevation_map", "", 
++                    local_map_info_.nan_percentage_in_radius, 
++                    local_map_info_.cost_params.unknown_cost,
++                    current_pose,
++                    terrain_plane_params_.delta_x,
++                    terrain_plane_params_.delta_y,
++                    terrain_plane_params_.num_planes);
++
++        // map_operation::averageMapFilteringAndcomputeTerrainPlaneInformation(
++        size_t num_NAN = map_operation::checkNAN(this->local_map, 
++                "filtered_elevation_map");
++        debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
++        this->local_map.setBasicLayers({"filtered_elevation_map"});
++    }
++
++
++    // update occupancy map for **ALL MODE**!!!!!!!!!!!!!
+     std::string elevaion_map_name = "elevation_map";
+     if (local_map_info_.mode == 2 || local_map_info_.mode == 3)
+     {
+@@ -256,6 +319,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+             elevaion_map_name, "occupancy_map",
+             local_map_info_.obstacle_threshold, has_nan);
+ 
++
++
++
++    // check if map contains nan values
+     if (has_nan && local_map_info_.mode == 0)
+     {
+         debugger::debugColorTextOutput("[LocalMap] "
+@@ -269,6 +336,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         exit(-1);
+     }
+ 
++    // compute signed distance after assigning obstacles
+     if (local_map_info_.mode == 4)
+     {
+         map_operation::computeSignedDistnaceField(this->local_map, 
+@@ -277,6 +345,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+                 "occupancy_map", "filtered_elevation_map");
+     }
+ 
++    // bresham line algorithm to assign unknown behind obstalces
+     if (local_map_info_.mode == 5)
+     {
+         grid_map::Index index;
+@@ -285,8 +354,6 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+                 index, local_map_info_.cost_params.unknown_cost,
+                 "occupancy_map", "filtered_elevation_map");
+     }
+-
+-
+ }
+ 
+ // the order of vertices are (0, 0), (0, 1), (1, 1), (1, 0) in the grid map
+diff --git a/src/map_operation.cpp b/src/map_operation.cpp
+index dee399c..9fdac5b 100644
+--- a/src/map_operation.cpp
++++ b/src/map_operation.cpp
+@@ -32,6 +32,8 @@
+ #include "utils/line.h"
+ #include <eigen3/Eigen/Dense>
+ #include "map_operation.h"
++#include "terrain_friction.h"
++#include "robot_state.h"
+ #include <cmath>
+ 
+ namespace bipedlab
+@@ -476,6 +478,214 @@ void assignUnknownBehindObstacles(grid_map::GridMap& map,
+         }
+     }
+ }
++
++// return a vector of terrain plane information
++std::shared_ptr<std::vector<plane::terrain_info_t>>
++averageMapFilteringAndcomputeTerrainPlaneInformation(grid_map::GridMap& map, 
++        const grid_map::Size& gridMapSize, 
++        const double filterRadius,
++        const std::string apply_to_layer,
++        std::string output_layer,
++        const double percentage, // larger, the more be corrected
++        const double nan_value, 
++        const pose_t& robot_pose, 
++        const double delta_x,
++        const double delta_y,
++        const double num_planes) 
++{
++    if (output_layer.size()==0)
++        output_layer  = "filtered_" + apply_to_layer;
++
++    if (!map.exists(output_layer))
++        map.add(output_layer, Eigen::MatrixXf::Zero(gridMapSize(0), gridMapSize(1)));
++
++
++    // prepare for plane information
++    Eigen::Vector2f robot_pose_vec = Eigen::Vector2f(std::cos(robot_pose.theta),
++                                                     std::sin(robot_pose.theta));
++    // grid_map::Size submap_size = map.getSize();
++    // size_t num_points = submap_size(0) * submap_size(1);
++    // std::vector<plane::terrain_info_t> terrain_plane_vec(num_planes);
++    auto terrain_plane_ptr = 
++        std::make_shared<std::vector<plane::terrain_info_t> >(num_planes);
++    std::vector<std::vector<Eigen::Vector3f>> segment_points(num_planes);
++
++
++
++    // Iterate over whole map.
++    auto& data_to = map[output_layer];
++    for (grid_map::GridMapIterator it(map); !it.isPastEnd(); ++it) 
++    {
++        grid_map::Position currentPosition;
++        map.getPosition(*it, currentPosition);
++        bool assign_nan = true;
++
++        /////////////////////////
++        // average nan filtering
++        ////////////////////////
++        {
++            // assign NAN with nan_value
++            if (!map.isValid(*it, apply_to_layer))
++                map.atPosition(output_layer, currentPosition) = nan_value;
++
++            double mean = 0.0;
++            double sumOfWeights = 0.0;
++
++            // Compute weighted mean.
++            size_t num_cell_in_circle = 0;
++            size_t num_nan_cell = 0;
++            for (grid_map::CircleIterator circleIt(map, currentPosition, filterRadius); 
++                    !circleIt.isPastEnd(); ++circleIt) 
++            {
++                num_cell_in_circle++;
++                if (!map.isValid(*circleIt, apply_to_layer)) 
++                {
++                    num_nan_cell++;
++                    continue; 
++                }
++                grid_map::Position currentPositionInCircle;
++                map.getPosition(*circleIt, currentPositionInCircle);
++
++                // Computed weighted mean based on Euclidian distance.
++                double distance = (currentPosition - currentPositionInCircle).norm();
++                double weight = pow(filterRadius - distance, 2);
++                mean += weight * map.at(apply_to_layer, *circleIt);
++                sumOfWeights += weight;
++            }
++            double ratio = (double) num_nan_cell / num_cell_in_circle;
++
++            // apply filter
++            const size_t i = it.getLinearIndex();
++            if (sumOfWeights != 0 && ratio <= percentage) 
++            {
++                data_to(i) = mean / sumOfWeights;
++                assign_nan = false;
++            } 
++            else 
++            {
++                data_to(i) = nan_value;
++                debugger::debugColorTextOutput("[map_operation]/[averageNANFiltering] "
++                        "hole too big, remain large value", 4, Y);
++            }
++        }
++
++
++        /////////////////////////////
++        // terrain plane computation 
++        ////////////////////////////
++        // if current value is nan (large value), skipped!
++        if (assign_nan)
++            continue;
++
++        const size_t i = it.getLinearIndex();
++        Eigen::Vector2f v = currentPosition.cast<float>() - Eigen::Vector2f(robot_pose.x, robot_pose.y);
++        double distance = v.norm();
++        double x_distance = robot_pose_vec.dot(v);
++
++        double theta = std::acos(x_distance / std::max(distance, 1e-5));
++        double y_distance = distance * std::sin(theta);
++        if (y_distance > delta_y || x_distance < 0)
++            continue;
++
++        int k = std::floor(x_distance / delta_x);
++        if (k < num_planes)
++        {
++            Eigen::Vector3f lidar_point(currentPosition(0), currentPosition(2), data_to(i));
++            segment_points[k].push_back(lidar_point.col(i).cast<float>());
++        }
++    }
++
++    ////////////////////////
++    // terrain plane fitting
++    ////////////////////////
++    for (int seg = 0; seg < num_planes; ++seg)
++    {
++        size_t num_seg = segment_points[seg].size();
++        Eigen::MatrixXf seg_points = Eigen::MatrixXf(3, num_seg);
++        for (int i = 0; i < num_seg; ++i)
++        {
++            seg_points.col(i) = segment_points[seg][i];
++        }
++        terrain_plane_ptr->at(seg).points = seg_points;
++        auto plane_params = 
++            plane::fitPlaneViaLeastSquares(terrain_plane_ptr->at(seg).points);
++        std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++        terrain_plane_ptr->at(seg) = *plane_params;
++        terrain_plane_ptr->at(seg).robot_pose = robot_pose;
++        terrain_plane_ptr->at(seg).length = delta_x;
++        terrain_plane_ptr->at(seg).width = delta_y;
++    }
++
++    return terrain_plane_ptr;
++}
++
++
++// return a vector of terrain plane information
++std::shared_ptr<std::vector<plane::terrain_info_t>>
++averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(grid_map::GridMap& map, 
++        const grid_map::Size& gridMapSize, 
++        const double filterRadius,
++        const std::string apply_to_layer,
++        std::string output_layer,
++        const double percentage, // larger, the more be corrected
++        const double nan_value, 
++        const pose_t& robot_pose, 
++        const double delta_x,
++        const double delta_y,
++        const double num_planes) 
++{
++    if (output_layer.size()==0)
++        output_layer  = "filtered_" + apply_to_layer;
++
++    if (!map.exists(output_layer))
++        map.add(output_layer, Eigen::MatrixXf::Zero(gridMapSize(0), gridMapSize(1)));
++
++    // plane information
++    auto terrain_info_ptr = 
++        std::make_shared<std::vector<plane::terrain_info_t> >(num_planes);
++    terrain_info_ptr = averageMapFilteringAndcomputeTerrainPlaneInformation(
++            map, gridMapSize, filterRadius, apply_to_layer, output_layer,
++            percentage, nan_value, robot_pose, delta_x, delta_y, num_planes);
++
++    // prepare for terrain information
++    grid_map::Position robot_position(robot_pose.x, robot_pose.y);
++    grid_map::Index cell_index;
++    map.getIndex(robot_position, cell_index);
++
++
++    // taking terrain information 
++    std::vector< std::string > terrain_types = map.getLayers();
++    float terrain_type = -1;
++    float terrain_value = -1;
++    float terrain_friction = -1;
++    for (int i = 0; i < terrain_types.size(); ++i)
++    {
++        terrain_value = map.at(terrain_types[i], cell_index);
++        if (terrain_value > 0)
++        {
++            terrain_type = i;
++            terrain_friction = terrain_friction::terrain_friction[i];
++        }
++            
++    }
++
++    if (terrain_value < 0)
++    {
++        std::string txt = "[WARNING]: TERRAIN INFORMATION NOT ASSIGNED!!!!";
++        debugger::debugColorTextOutput(txt,  10, Y);
++    }
++
++
++    // assign terrain information
++    for (int i = 0; i < num_planes; ++i)
++    {
++        terrain_info_ptr->at(i).terrain.terrain_type = terrain_type;
++        terrain_info_ptr->at(i).terrain.probability = terrain_value;
++        terrain_info_ptr->at(i).terrain.friction = terrain_friction;
++    }
++
++    return terrain_info_ptr;
++}
+     
+ } /* map_operation */ 
+ } /* bipedlab */ 
+diff --git a/src/test_rviz_tool.cpp b/src/test_rviz_tool.cpp
+new file mode 100644
+index 0000000..8a39ac3
+--- /dev/null
++++ b/src/test_rviz_tool.cpp
+@@ -0,0 +1,164 @@
++// ROS
++#include <ros/ros.h>
++
++// For visualizing things in rviz
++#include <rviz_visual_tools/rviz_visual_tools.h>
++
++// C++
++#include <string>
++#include <vector>
++
++#include <eigen3/Eigen/Dense> // SVD
++#include <eigen3/Eigen/StdVector>
++#include <eigen3/Eigen/Eigenvalues>
++
++#include <tf2/LinearMath/Matrix3x3.h>
++#include <tf2/LinearMath/Quaternion.h>
++#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
++
++
++
++#include "fake_map.h"
++#include "lie_group.h"
++#include "map_cost.h"
++#include "utils/plotting.h"
++#include "utils/debugger.h"
++#include "utils/utils.h"
++#include "utils/line.h"
++#include "utils/plane.h"
++#include "clf_rrt.h"
++#include "csv.h"
++#include "point.h"
++
++
++// 0-4 general debugging purposes
++// 5-8: algorithm status/process
++int DEBUG_LEVEL = 3;
++
++
++namespace rvt = rviz_visual_tools;
++using namespace bipedlab;
++
++namespace rviz_visual_tools
++{
++
++class RvizVisualToolsDemo
++{
++    private:
++        // A shared node handle
++        ros::NodeHandle nh_;
++
++        // For visualizing things in rviz
++        rvt::RvizVisualToolsPtr visual_tools_;
++
++        std::string name_;
++
++    public:
++        /**
++         * \brief Constructor
++         */
++        RvizVisualToolsDemo() : name_("rviz_demo") 
++    {
++        visual_tools_.reset(new rvt::RvizVisualTools("world", "/rviz_visual_tools"));
++        visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++        ROS_INFO("Sleeping 5 seconds before running demo");
++        ros::Duration(5.0).sleep();
++
++        // Clear messages
++        visual_tools_->deleteAllMarkers();
++        visual_tools_->enableBatchPublishing();
++    }
++
++        void publishLabelHelper(const Eigen::Isometry3d& pose, const std::string& label)
++        {
++            Eigen::Isometry3d pose_copy = pose;
++            pose_copy.translation().x() -= 0.2;
++            visual_tools_->publishText(pose_copy, label, rvt::WHITE, rvt::XXLARGE, false);
++        }
++
++        void testRows(double& x_location)
++        {
++            debugger::debugOutput("[Unit test] ", "Plane Fitting", 5);
++            plane::plane_t test_plane;
++            test_plane.print();
++
++            Eigen::MatrixXf test_points(3, 6); // input points
++            test_points << 0, 1, 3, 5, 7, 9,
++                        0, 2, 4, 6, 8, 10,
++                        0, 3, 6, 9, 12, 15;
++            std::cout << "points: " << test_points << std::endl;
++            auto plane_params = plane::fitPlaneViaLeastSquares(test_points);
++            plane_params->print(); // from matlab: 1.7764e-15          1.5           -1  -1.1552e-15
++            std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++
++            // rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
++            // visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_frame","/rviz_visual_markers"));
++            // visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++            // Clear messages
++            // visual_tools_->deleteAllMarkers();
++            // visual_tools_->enableBatchPublishing();
++
++            visual_tools_->publishABCDPlane(plane_coefficients[0],
++                    plane_coefficients[1],
++                    plane_coefficients[2],
++                    plane_coefficients[3]);
++
++            // Create pose
++            // Eigen::Isometry3d pose1 = Eigen::Isometry3d::Identity();
++            // Eigen::Isometry3d pose2 = Eigen::Isometry3d::Identity();
++
++            // pose1.translation().x() = x_location;
++
++            // double space_between_rows = 0.2;
++            // double y = 0;
++            // double step;
++
++
++            // // --------------------------------------------------------------------
++            // ROS_INFO_STREAM_NAMED(name_, "Displaying Planes");
++            // pose1 = Eigen::Isometry3d::Identity();
++            // y += space_between_rows;
++            // pose1.translation().y() = y;
++            // step = 0.2;
++            // double max_plane_size = 0.075;
++            // double min_plane_size = 0.01;
++            // for (double i = 0; i <= 1.0; i += step)
++            // {
++            //     visual_tools_->publishXYPlane(pose1, rvt::RED, i * max_plane_size + min_plane_size);
++            //     visual_tools_->publishXZPlane(pose1, rvt::GREEN, i * max_plane_size + min_plane_size);
++            //     visual_tools_->publishYZPlane(pose1, rvt::BLUE, i * max_plane_size + min_plane_size);
++            //     if (i == 0.0)
++            //     {
++            //         publishLabelHelper(pose1, "Planes");
++            //     }
++
++            //     pose1.translation().x() += step;
++            // }
++            visual_tools_->trigger();
++        }
++
++};  // end class
++
++}  // namespace rviz_visual_tools
++
++int main(int argc, char** argv)
++{
++    ros::init(argc, argv, "visual_tools_demo");
++    ROS_INFO_STREAM("Visual Tools Demo");
++
++    // Allow the action server to recieve and send ros messages
++    ros::AsyncSpinner spinner(1);
++    spinner.start();
++
++    rviz_visual_tools::RvizVisualToolsDemo demo;
++
++    double x_location = 0;
++    demo.testRows(x_location);
++
++    ROS_INFO_STREAM("Shutting down.");
++
++    return 0;
++}
++
+diff --git a/src/unit_test.cpp b/src/unit_test.cpp
+index f6b9825..17fc933 100644
+--- a/src/unit_test.cpp
++++ b/src/unit_test.cpp
+@@ -65,15 +65,19 @@
+ #include "utils/debugger.h"
+ #include "utils/utils.h"
+ #include "utils/line.h"
++#include "utils/plane.h"
+ #include "clf_rrt.h"
++#include "point.h"
+ #include "csv.h"
+ #include "point.h"
+ 
++#include "rviz_visual_tools/rviz_visual_tools.h"
++
+ 
+ 
+ // 0-4 general debugging purposes
+ // 5-8: algorithm status/process
+-int DEBUG_LEVEL = 3; 
++int DEBUG_LEVEL = 3;
+ 
+ using namespace bipedlab;
+ // typedef velodyne_pointcloud::PointXYZIR PointXYZRI;
+@@ -85,6 +89,182 @@ int main(int argc, char *argv[]) {
+     ros::NodeHandle nh;
+     // std::cout << DEBUG_LEVEL << std::endl;
+ 
++   // debugger::debugOutput("[Unit test] ", "Least Squares", 5);
++   // Eigen::MatrixXf A = Eigen::MatrixXf::Random(3, 2);
++   // std::cout << "Here is the matrix A:\n" << A << std::endl;
++   // Eigen::VectorXf b = Eigen::VectorXf::Random(3);
++   // std::cout << "Here is the right hand side b:\n" << b << std::endl;
++   // std::cout << "The least-squares solution is:\n"
++   //      << A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b) << std::endl;
++
++
++
++   // For visualizing things in rviz
++
++
++   debugger::debugTitleTextOutput("[Unit test] ", "Plane Fitting", 5);
++   // plane::plane_t test_plane;
++   // test_plane.print();
++   int dataset = 2;
++
++   Eigen::MatrixXd lidar_points; // input points
++   double y_width = 2;
++   if (dataset == 1)
++   {
++       Eigen::MatrixXd test_points(3, 8); // input points
++       test_points <<
++           0.014047, 0.53454, 0.5782, 0.06592, 0.00070, 0.42795, 0.73865, 0.84611,
++           0.047974, 0.83191, 0.4617, 0.45222, 0.33814, 0.67403, 0.52019, 0.45547,
++           0.677590, 0.27622, 0.7249, 0.80713, 0.34365, 0.47471, 0.29546, 0.20986;
++       lidar_points = test_points;
++   }
++   else if (dataset == 2)
++   {
++       size_t num_test_points = 10000;
++       auto xs = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, -1, 3);
++       auto ys = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
++                                                               -y_width/2, y_width/2);
++       auto z_noise = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
++                                                               -0.05, 0.05);
++       std::vector<float> zs(num_test_points, 0);
++       double k1 = 1;
++       double k2 = 0;
++       for (int i = 0; i < num_test_points; ++i)
++       {
++           zs[i] = std::cos(k1 * xs[i]) * std::cos(k2 * ys[i]) + z_noise[i];
++       }
++
++       Eigen::MatrixXf test_points(3, num_test_points);
++       float* xs_ptr = &xs[0];
++       test_points.row(0) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(xs.data(), xs.size());
++
++       float* ys_ptr = &ys[0];
++       test_points.row(1) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(ys.data(), ys.size());
++
++       float* zs_ptr = &zs[0];
++       test_points.row(2) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(zs.data(), zs.size());
++       lidar_points = test_points.cast<double>();
++   }
++
++   // robot pose
++   pose_t robot_pose(0, 0, deg_to_rad(0));
++   Eigen::Vector2f robot_pose_vec = Eigen::Vector2f(std::cos(robot_pose.theta),
++                                                    std::sin(robot_pose.theta));
++
++
++
++
++   // plane fitting
++   int max_step = 5;
++   double increment = 0.3;
++   double delta_y = 0.3;
++   size_t num_points = lidar_points.cols();
++   std::vector<plane::terrain_info_t> terrain_plane_vec(max_step);
++   std::vector<std::vector<Eigen::Vector3f>> segment_points(max_step);
++
++   for (int i = 0; i < num_points; ++i)
++   {
++       Eigen::Vector2f v = lidar_points.block(0, i, 2, 1).cast<float>() - Eigen::Vector2f(robot_pose.x, robot_pose.y);
++       double distance = v.norm();
++       double x_distance = robot_pose_vec.dot(v);
++
++       double theta = std::acos(x_distance / std::max(distance, 1e-5));
++       double y_distance = distance * std::sin(theta);
++       if (y_distance > delta_y || x_distance < 0)
++           continue;
++
++
++       // int k = -1;
++       // if (x_distance >= 0 && x_distance <= increment)
++       // {
++       //     k = 0;
++       // }
++       // else if (x_distance >= 1 * increment && x_distance <= 2 * increment)
++       //     k = 1;
++       // else if (x_distance >= 2 * increment && x_distance <= 3 * increment)
++       //     k = 2;
++       // else if (x_distance >= 3 * increment && x_distance <= 4 * increment)
++       //     k = 3;
++       // else if (x_distance >= 4 * increment && x_distance <= 5 * increment)
++       //     k = 4;
++       // else
++       // {
++       //     continue;
++       //     // std::string error_msg = "No such distnace: " + std::to_string(k);
++       //     // debugger::debugExitColor(error_msg, __LINE__, __FILE__);
++       // }
++       int k = std::floor(x_distance / increment);
++       if (k < max_step)
++       {
++           segment_points[k].push_back(lidar_points.col(i).cast<float>());
++       }
++   }
++
++   // plane fitting
++   
++   for (int seg = 0; seg < max_step; ++seg)
++   {
++       size_t num_seg = segment_points[seg].size();
++       Eigen::MatrixXf seg_points = Eigen::MatrixXf(3, num_seg);
++       for (int i = 0; i < num_seg; ++i)
++       {
++           seg_points.col(i) = segment_points[seg][i];
++       }
++       terrain_plane_vec[seg].points = seg_points;
++       auto plane_params = plane::fitPlaneViaLeastSquares(terrain_plane_vec[seg].points);
++       std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++       // terrain_plane_vec[seg].normal_vector = plane_params->normal_vector;
++       // terrain_plane_vec[seg].fixed_point = plane_params->fixed_point;
++
++       terrain_plane_vec[seg] = *plane_params;
++   }
++   // lidar_points = seg_points;
++
++
++   // plane_params->print(); // from matlab: 1.7764e-15          1.5           -1  -1.1552e-15
++   // std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++
++
++   // viz
++   rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
++   visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base","/rviz_visual_markers"));
++   visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++   // Clear messages
++   visual_tools_->deleteAllMarkers();
++   visual_tools_->enableBatchPublishing();
++
++   // publish all points
++   for (int i = 0; i < lidar_points.cols(); ++i) {
++       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
++       std_msgs::ColorRGBA color = visual_tools_->getColor(rviz_visual_tools::WHITE);
++       visual_tools_->publishSphere(lidar_points.col(i), color, scale, "all points");
++   }
++
++   // publish plane information
++   for (int seg = 0; seg < max_step; ++seg)
++   {
++       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
++       std_msgs::ColorRGBA color = visual_tools_->getColorScale((float) seg / max_step);
++       for (int i = 0; i < terrain_plane_vec[seg].points.cols(); ++i)
++       {
++           visual_tools_->publishSphere(
++                   terrain_plane_vec[seg].points.col(i).cast<double>(),
++                   color, scale, "seg points");
++       }
++       std::vector<float> plane_coefficients = 
++           terrain_plane_vec[seg].getPlaneCoefficients();
++       Eigen::Vector3d center = terrain_plane_vec[seg].points.rowwise().mean().cast<double>();
++       visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
++               plane_coefficients[1],
++               plane_coefficients[2],
++               plane_coefficients[3], center, color, increment, 2*delta_y);
++   }
++   visual_tools_->trigger();
++   exit(0);
++
++
++
+ 
+     // debugger::debugOutput("[Unit test] Quaternion", "", 5);
+     // tf2::Quaternion q;
+@@ -182,7 +362,7 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     // test assignUnknownBehindObstacles
+-    
++
+ 
+     // test coimputeBresenham
+     auto points = line::coimputeBresenham(0, 0, -5, 0);
+@@ -203,8 +383,8 @@ int main(int argc, char *argv[]) {
+ 
+     // test Eigen SVD
+     Eigen::Matrix3f M; // input matrix
+-    M <<        0,         0,        0, 
+-        -0.660054, -0.510275, 0.651784,   
++    M <<        0,         0,        0,
++        -0.660054, -0.510275, 0.651784,
+          0.631292,  0.154421,  0.80545;
+ 
+     Eigen::Matrix3f U; // save for comparision
+@@ -243,14 +423,14 @@ int main(int argc, char *argv[]) {
+         assert((V - svd.matrixV()).norm() < 1e-5);
+     }
+ 
+-    
++
+ 
+ 
+     // test angle from std
+     double p_x = 0;
+     double p_y = 0;
+ 
+-    // I 
++    // I
+     double p1_x = 1;
+     double p1_y = 3;
+     double dis_p1_p = std::sqrt((p1_x - p_x) * (p1_x - p_x) + (p1_y - p_y) * (p1_y - p_y));
+@@ -286,7 +466,7 @@ int main(int argc, char *argv[]) {
+     // -y-axis
+     double p8_x = 0;
+     double p8_y = -1;
+-    
++
+ 
+     // double theta1 = std::asin((p1_x - p_x) / dis_p1_p);
+     // double theta2 = M_PI + std::asin((p2_x - p_x) / dis_p2_p);
+@@ -297,46 +477,46 @@ int main(int argc, char *argv[]) {
+     // debugger::debugOutput("theta3: ", theta3, 5);
+     // debugger::debugOutput("theta4: ", theta4, 5);
+ 
+-    debugger::debugOutput("theta1 from pi function: ", 
++    debugger::debugOutput("theta1 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p1_x, p1_y), 5);
+-    debugger::debugOutput("theta2 from pi function: ", 
++    debugger::debugOutput("theta2 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p2_x, p2_y), 5);
+-    debugger::debugOutput("theta3 from pi function: ", 
++    debugger::debugOutput("theta3 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p3_x, p3_y), 5);
+-    debugger::debugOutput("theta4 from pi function: ", 
++    debugger::debugOutput("theta4 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p4_x, p4_y), 5);
+ 
+-    debugger::debugOutput("theta5 from pi function: ", 
++    debugger::debugOutput("theta5 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p5_x, p5_y), 5);
+-    debugger::debugOutput("theta6 from pi function: ", 
++    debugger::debugOutput("theta6 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p6_x, p6_y), 5);
+-    debugger::debugOutput("theta7 from pi function: ", 
++    debugger::debugOutput("theta7 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p7_x, p7_y), 5);
+-    debugger::debugOutput("theta8 from pi function: ", 
++    debugger::debugOutput("theta8 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p8_x, p8_y), 5);
+ 
+-    debugger::debugOutput("theta1 from 2pi function: ", 
++    debugger::debugOutput("theta1 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p1_x, p1_y), 5);
+-    debugger::debugOutput("theta2 from 2pi function: ", 
++    debugger::debugOutput("theta2 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p2_x, p2_y), 5);
+-    debugger::debugOutput("theta3 from 2pi function: ", 
++    debugger::debugOutput("theta3 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p3_x, p3_y), 5);
+-    debugger::debugOutput("theta4 from 2pi function: ", 
++    debugger::debugOutput("theta4 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p4_x, p4_y), 5);
+-    
+-    debugger::debugOutput("theta5 from 2pi function: ", 
++
++    debugger::debugOutput("theta5 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p5_x, p5_y), 5);
+-    debugger::debugOutput("theta6 from 2pi function: ", 
++    debugger::debugOutput("theta6 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p6_x, p6_y), 5);
+-    debugger::debugOutput("theta7 from 2pi function: ", 
++    debugger::debugOutput("theta7 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p7_x, p7_y), 5);
+-    debugger::debugOutput("theta8 from 2pi function: ", 
++    debugger::debugOutput("theta8 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p8_x, p8_y), 5);
+ 
+ 
+     exit(0);
+ 
+-    
++
+     // publishers
+     ros::Publisher map_pub = nh.advertise<grid_map_msgs::GridMap>(
+             "world_map", 1, true);
+@@ -344,22 +524,22 @@ int main(int argc, char *argv[]) {
+             "local_map", 1, true);
+     // ros::Publisher debug_pub = nh.advertise<grid_map_msgs::GridMap>(
+     //         "debug", 1, true);
+-    ros::Publisher path_pub = 
++    ros::Publisher path_pub =
+         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("path_points", 1);
+-    ros::Publisher search_pub = 
++    ros::Publisher search_pub =
+         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("search_points", 1);
+-    ros::Publisher marker_pub = 
++    ros::Publisher marker_pub =
+         nh.advertise<visualization_msgs::MarkerArray>("results", 10);
+ 
+ 
+     // markers
+     visualization_msgs::Marker marker;
+     visualization_msgs::MarkerArray marker_array;
+-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
++    pcl::PointCloud<pcl::PointXYZI>::Ptr
+         path_points (new pcl::PointCloud<pcl::PointXYZI>);
+     path_points->header.frame_id = "odom";
+ 
+-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
++    pcl::PointCloud<pcl::PointXYZI>::Ptr
+         search_points (new pcl::PointCloud<pcl::PointXYZI>);
+     search_points->header.frame_id = "odom";
+ 
+@@ -371,14 +551,14 @@ int main(int argc, char *argv[]) {
+     double goal_bias = 0.2;
+     double distance_threshold_for_sampling = 0;
+ 
+-    pose_sampler_params_t pose_sampler_params(goal_bias, 
++    pose_sampler_params_t pose_sampler_params(goal_bias,
+                                               distance_threshold_for_sampling);
+ 
+     // rrt params
+     size_t mode = 1;
+     size_t num_samples = SIZE_MAX;
+     double allowed_computation_time = 120; // in seconds
+-    bool terminate_if_path = false; 
++    bool terminate_if_path = false;
+ 
+ 
+     rrt_params_t rrt_params;
+@@ -410,11 +590,11 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     LyapunovDistance* lyap_dist = new LyapunovDistance();
+-    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map), 
++    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map),
+                                        local_map_info);
+     exit(-1);
+     MapCost* map_cost = new MapCost(local_map, rrt_params.mode);
+-    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map, 
++    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map,
+                                                *map_cost, rrt_params.mode);
+ 
+     // LyapunovDistance() is declared here for speed
+@@ -469,10 +649,10 @@ int main(int argc, char *argv[]) {
+     // load rrt
+     // robot_state_t robot_state(fake_map->start);
+     // CLFRRTStarPlanner* planner = new CLFRRTStarPlanner(
+-    //         *(fake_map->map), length_of_local_map, 
++    //         *(fake_map->map), length_of_local_map,
+     //         pose_6dof_t(fake_map->start), pose_6dof_t(fake_map->goal),
+     //         robot_state, pose_sampler_params, rrt_params);
+-    
++
+     // grid_map::GridMap local_map({"test"});
+     // local_map.setFrameId(planner->getLocalMap().getFrameId());
+     // local_map["test"] = (planner->getLocalMap())["elevation"];
+@@ -484,22 +664,22 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     // show targets
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose1", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose1",
+               0, 1, 0, 1, // color
+               pose1, // pose
+               0, 0 // count, time
+               );
+     marker_array.markers.push_back(marker);
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose2", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose2",
+               0, 1, 1, 1, // color
+               pose2,
+               0, 0 // count, time
+               );
+     marker_array.markers.push_back(marker);
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose3", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose3",
+               0, 1, 1, 1, // color
+               pose3,
+               0, 0 // count, time
+@@ -527,18 +707,18 @@ int main(int argc, char *argv[]) {
+         // search locally
+         bool is_locally_free = true;
+         grid_map::Position center(it.x, it.y);
+-        
++
+         if (local_map->local_map.atPosition("occupancy_map", center) == 1)
+             is_locally_free = false;
+         else
+         {
+             search_points->points.clear();
+             for (grid_map::CircleIterator iterator(local_map->local_map, center, radius);
+-                    !iterator.isPastEnd(); ++iterator) 
++                    !iterator.isPastEnd(); ++iterator)
+             {
+                 grid_map::Position position;
+                 local_map->local_map.getPosition(*iterator, position);
+-                if (local_map->local_map.at("occupancy_map", *iterator) == 1) 
++                if (local_map->local_map.at("occupancy_map", *iterator) == 1)
+                 {
+                     is_locally_free = false;
+                     search_points->points.push_back(pcl::PointXYZI(
+@@ -551,7 +731,7 @@ int main(int argc, char *argv[]) {
+                 }
+             }
+         }
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                search_points->header.stamp);
+         path_pub.publish(search_points);
+         search_pub.publish(search_points);
+@@ -568,14 +748,14 @@ int main(int argc, char *argv[]) {
+                 (float) it.x, (float) it.y, 1.5, 255));
+             debugger::debugTextOutput("[main] point free", 0);
+         }
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                path_points->header.stamp);
+         path_pub.publish(path_points);
+         // utils::pressEnterToContinue();
+     }
+ 
+-    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-    //           "sample pose", 
++    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++    //           "sample pose",
+     //           0, 1, 1, 1, // color
+     //           planner->sample_pose_testing,
+     //           0, 0 // count, time
+@@ -584,14 +764,14 @@ int main(int argc, char *argv[]) {
+ 
+     // if (planner->getPathStatus())
+     // {
+-    //     std::vector<point2d_t<double>> path = planner->getPlannedPath(); 
+-    //     std::vector<std::pair<pose_t, bool>> waypoints = 
+-    //         planner->getPlannedWaypoints(); 
++    //     std::vector<point2d_t<double>> path = planner->getPlannedPath();
++    //     std::vector<std::pair<pose_t, bool>> waypoints =
++    //         planner->getPlannedWaypoints();
+ 
+     //     for (const auto& it : path)
+     //     {
+-    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE, 
+-    //         //         "planned path", 
++    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE,
++    //         //         "planned path",
+     //         //         0, 0, 0, 0, // color
+     //         //         it.x, it.y, 0, // location
+     //         //         0, 0, 0, 1, // quaternion
+@@ -607,8 +787,8 @@ int main(int argc, char *argv[]) {
+     //     size_t count = 0;
+     //     for (const auto& it : waypoints)
+     //     {
+-    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-    //                 "waypoints", 
++    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++    //                 "waypoints",
+     //                 1, 1, 0, 1, // color
+     //                 pose_t(it.first),
+     //                 count, 0 // count, time
+@@ -623,7 +803,7 @@ int main(int argc, char *argv[]) {
+     while (nh.ok())
+     {
+         ros::Time time = ros::Time::now();
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                path_points->header.stamp);
+         path_pub.publish(path_points);
+ 
+@@ -646,6 +826,6 @@ int main(int argc, char *argv[]) {
+         ros::spinOnce();
+         loop_rate.sleep();
+     }
+-    
++
+     return 0;
+ }

@@ -31,6 +31,8 @@
 #include "utils/debugger.h"
 #include "utils/utils.h"
 #include "robot_state.h"
+#include <geometry_msgs/Pose.h>
+
 
 namespace bipedlab
 {
@@ -354,6 +356,136 @@ convertToPlannerMsg(const planner_info_to_controller_t& data,
     state.torso.yaw = data.torso.yaw;
 
     // terrain
+
+    // waypoints
+
+    // footplacement
+
+    // pose
+    state.pose.position.x = data.pose[0];
+    state.pose.position.y = data.pose[1];
+    state.pose.position.z = data.pose[2];
+
+    state.pose.orientation.w = data.pose[3];
+    state.pose.orientation.x = data.pose[4];
+    state.pose.orientation.y = data.pose[5];
+    state.pose.orientation.z = data.pose[6];
+
+    return state;
+}
+
+planner_msgs::State
+convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data, 
+                    const std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_plane_ptr,
+                    const ros::Time& time,
+                    const std::string& frame_id)
+{
+    planner_msgs::State state;
+
+    state.header.stamp = time;
+    state.header.frame_id = frame_id;
+
+    state.behavior = (int) data.behavior;
+    state.velocity.x = data.velocity[0]; 
+    state.velocity.y = data.velocity[1]; 
+    state.velocity.z = data.velocity[2];  // omega
+
+
+    state.torso.roll = data.torso.roll;
+    state.torso.pitch = data.torso.pitch;
+    state.torso.yaw = data.torso.yaw;
+
+
+
+    // plane information
+    robot_state_t robot_state = robot_state_t(terrain_plane_ptr->at(0).robot_pose);
+    geometry_msgs::Pose geometry_pose;
+    geometry_pose.position = robot_state.inekf_state.position;
+    geometry_pose.orientation = robot_state.inekf_state.orientation;
+    for (int i = 0; i < terrain_plane_ptr->size(); ++i)
+    {
+        planner_msgs::Plane plane;
+        plane.normal_vector.x = terrain_plane_ptr->at(i).normal_vector(0);
+        plane.normal_vector.y = terrain_plane_ptr->at(i).normal_vector(1);
+        plane.normal_vector.z = terrain_plane_ptr->at(i).normal_vector(2);
+        plane.point.x = terrain_plane_ptr->at(i).fixed_point(0);
+        plane.point.y = terrain_plane_ptr->at(i).fixed_point(1);
+        plane.point.z = terrain_plane_ptr->at(i).fixed_point(2);
+        plane.pose = geometry_pose;
+        plane.delta_x = terrain_plane_ptr->at(i).length;
+        plane.delta_y = terrain_plane_ptr->at(i).width;
+        state.planes.push_back(plane);
+    }
+
+    // waypoints
+
+    // footplacement
+
+    // pose
+    state.pose.position.x = data.pose[0];
+    state.pose.position.y = data.pose[1];
+    state.pose.position.z = data.pose[2];
+
+    state.pose.orientation.w = data.pose[3];
+    state.pose.orientation.x = data.pose[4];
+    state.pose.orientation.y = data.pose[5];
+    state.pose.orientation.z = data.pose[6];
+
+    return state;
+}
+
+
+planner_msgs::State
+convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data, 
+                    const std::vector<plane::terrain_info_t>& terrain_info,
+                    const ros::Time& time,
+                    const std::string& frame_id)
+{
+    planner_msgs::State state;
+
+    state.header.stamp = time;
+    state.header.frame_id = frame_id;
+
+    state.behavior = (int) data.behavior;
+    state.velocity.x = data.velocity[0]; 
+    state.velocity.y = data.velocity[1]; 
+    state.velocity.z = data.velocity[2];  // omega
+
+
+    state.torso.roll = data.torso.roll;
+    state.torso.pitch = data.torso.pitch;
+    state.torso.yaw = data.torso.yaw;
+
+
+
+    // plane information
+    robot_state_t robot_state = robot_state_t(terrain_info.at(0).robot_pose);
+    geometry_msgs::Pose geometry_pose;
+    geometry_pose.position = robot_state.inekf_state.position;
+    geometry_pose.orientation = robot_state.inekf_state.orientation;
+    for (int i = 0; i < terrain_info.size(); ++i)
+    {
+        planner_msgs::Plane plane;
+        plane.normal_vector.x = terrain_info.at(i).normal_vector(0);
+        plane.normal_vector.y = terrain_info.at(i).normal_vector(1);
+        plane.normal_vector.z = terrain_info.at(i).normal_vector(2);
+        plane.point.x = terrain_info.at(i).fixed_point(0);
+        plane.point.y = terrain_info.at(i).fixed_point(1);
+        plane.point.z = terrain_info.at(i).fixed_point(2);
+        plane.pose = geometry_pose;
+        plane.delta_x = terrain_info.at(i).length;
+        plane.delta_y = terrain_info.at(i).width;
+        state.planes.push_back(plane);
+    }
+
+
+    // terrain info
+    if (terrain_info.size() > 0)
+    {
+        state.terrain.terrain_type = terrain_info[0].terrain.terrain_type;
+        state.terrain.probability = terrain_info[0].terrain.probability;
+        state.terrain.friction = terrain_info[0].terrain.friction;
+    }
 
     // waypoints
 

@@ -34,6 +34,7 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>      // std::setprecision
 
 
 extern int DEBUG_LEVEL;
@@ -109,6 +110,33 @@ namespace debugger
             std::cout << "\033[" + std::to_string(font) + ";" + 
                          std::to_string(color) + "m" 
                       << text 
+                      << value 
+                      << "\033[0m"
+                      << std::endl;
+    }
+
+
+    template <class T>
+    void debugWarningOutput(const std::string text, const T& value, int level = 0, 
+            text_color_t color = YELLOW)
+    {
+        if (level >= DEBUG_LEVEL)
+        {
+            debugColorOutput("[Warning]--" + text, value, level, Y, N);
+        }
+    }
+
+
+    template <class T> 
+    void debugColorOutputPrecision(const std::string text, 
+            const T& value, int level = 0, const size_t precision = 3,
+            text_color_t color = RED, text_front_t font = N)
+    {
+        if (level >= DEBUG_LEVEL)
+            std::cout << "\033[" + std::to_string(font) + ";" + 
+                         std::to_string(color) + "m" 
+                      << text 
+                      << std::setprecision(precision) << std::fixed
                       << value 
                       << "\033[0m"
                       << std::endl;

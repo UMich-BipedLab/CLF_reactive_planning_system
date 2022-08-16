@@ -36,6 +36,8 @@
 #include "point.h"
 #include "inekf_msgs/State.h"
 #include "planner_msgs/State.h"
+#include "utils/plane.h"
+
 
 
 namespace bipedlab
@@ -79,6 +81,18 @@ planner_msgs::State
 convertToPlannerMsg(const planner_info_to_controller_t& data,
                     const ros::Time& time,
                     const std::string& frame_id);
+planner_msgs::State
+convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data,
+        const std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_plane_ptr,
+        const ros::Time& time,
+        const std::string& frame_id);
+
+planner_msgs::State
+convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data,
+        const std::vector<plane::terrain_info_t>& terrain_plane,
+        const ros::Time& time,
+        const std::string& frame_id);
+
 
 
 

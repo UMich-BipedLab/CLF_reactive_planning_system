@@ -27,54 +27,63 @@
  * AUTHOR: Bruce JK Huang (bjhuang@umich.edu)
  * WEBSITE: https://www.BrucebotStudio.com/
  */
-#include <stdlib.h>
-#include <iostream>
+#ifndef TERRAIN_FRICTION_H
+#define TERRAIN_FRICTION_H
 
-#include <ros/ros.h>
-
-#include <nav_msgs/Odometry.h>
-#include <nav_msgs/OccupancyGrid.h>
-#include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Pose.h>
-#include <geometry_msgs/PoseStamped.h>
-
-#include <visualization_msgs/Marker.h>
-#include <visualization_msgs/MarkerArray.h> // Marker
-
-#include <pcl_conversions/pcl_conversions.h>
-// #include <velodyne_pointcloud/point_types.h>
-// #include <velodyne_pointcloud/pointcloudXYZIR.h>
+#include <string>
 
 
-
-#include <eigen3/Eigen/Dense> // SVD
-#include <eigen3/Eigen/StdVector>
-#include <eigen3/Eigen/Eigenvalues>
-
-
-#include "driver.h"
-#include "utils/plotting.h"
-#include "utils/debugger.h"
-#include "utils/utils.h"
-#include "clf_rrt.h"
-
-
-
-// 0-4 general debugging purposes
-// 5-8: algorithm status/process
-int DEBUG_LEVEL = 6; 
-
-using namespace bipedlab;
-// typedef velodyne_pointcloud::PointXYZIR PointXYZRI;
+namespace bipedlab
+{
+namespace terrain_properties
+{
+    // static const char *terrain_types[] =
+    // {
+    //     "road",                      // 0: road
+    //     "sidewalk",                  // 1: sidewalk
+    //     "terrain",                   // 2: terrain
+    //     "building",                  // 3: bulding
+    //     "vegetation",                // 4: vegetation
+    //     "walkable",                  // 5: walkable
+    // };
 
 
-int main(int argc, char *argv[]) {
-    // // ros
-    ros::init(argc, argv, "driver");
-    ros::NodeHandle nh("~");
+    constexpr float terrain_friction[] = 
+    {
+        1,                  // 0: road
+        1,                  // 1: sidewalk
+        0.3,                // 2: terrain
+        1,                  // 3: bulding
+        0.3,                // 4: vegetation
+        1,                  // 5: walkable
+    };
 
-    Driver driver_node(nh);
-    std::cout<< "ALL DONE" << std::endl;
+    constexpr std::string_view  terrain_type[] = 
+    {
+        "road",                  // 0: road
+        "sidewalk",                  // 1: sidewalk
+        "terrain",                // 2: terrain
+        "building",                  // 3: bulding
+        "vegetation",                // 4: vegetation
+        "walkable",                  // 5: walkable
+    };
 
-    return 0;
-}
+
+// struct EL_TABLE
+// {
+//    constexpr EL_TABLE() : values()
+//    {
+//       for (auto i = 0; i < 32; ++i) {
+//          values[i] = tan(el[i]*M_PI/180);
+//       }
+//    }
+// 
+//    int values[32];
+// };
+// 
+// constexpr EL_TABLE EL_TAN = EL_TABLE();
+
+} // namespace terrain_friction
+} // namespace BipedLab
+
+#endif

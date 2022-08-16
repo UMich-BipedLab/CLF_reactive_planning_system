@@ -28,6 +28,26 @@ fake_robot:
   # x: 4.4797296524 
   # y: -3.44215011597 
   # yaw: -45
+  
+  # wavefield 
+  x: -1.86
+  y: -5.2 
+  yaw: -145
+
+
+  # grove 
+  x: 14 
+  y: -1.3
+  yaw: 0 
+
+  x: 16.38
+  y: -5.23
+  yaw: 0 
+
+  # wavefield
+  x: -1.3
+  y: -4.3
+  yaw: -145 
 
   # orientation in deg
   z: 0 

@@ -8,6 +8,8 @@
     <rosparam file="$(find cassie_planning)/config/communication.yaml" command="load" />
     <rosparam file="$(find cassie_planning)/config/cost_map.yaml" command="load" />
     <rosparam file="$(find cassie_planning)/config/robot_params.yaml" command="load" />
+    <rosparam file="$(find cassie_planning)/config/plane.yaml" command="load" />
+
 
 
     <!-- log commands (saved in ~/.ros folder)-->

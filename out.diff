@@ -1,0 +1,1078 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f4c2634..b1532c3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -53,6 +53,7 @@ find_package(catkin REQUIRED COMPONENTS
+   inekf_msgs
+   planner_msgs
+   grid_map_msgs
++  rviz_visual_tools
+ )
+ 
+ find_package(PCL 1.2 REQUIRED)
+@@ -131,6 +132,29 @@ add_dependencies(test_udp ${${PROJECT_NAME}_EXPORTED_TARGETS}
+ target_link_libraries(test_udp ${catkin_LIBRARIES} ${PCL_LIBRARIES}
+ )
+ 
++add_executable(test_rviz_tool src/test_rviz_tool.cpp src/fake_map.cpp
++    src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
++    src/local_chart.cpp src/standalone_lyapunov_distance.cpp src/local_map.cpp
++    src/map_operation.cpp
++    src/sample_pose.cpp src/pose.cpp 
++    src/lyapunov_path.cpp 
++    src/standalone_local_chart.cpp
++    src/standalone_omni_local_chart.cpp
++    src/standalone_omni_lyapunov_distance.cpp
++    src/omni_local_chart.cpp
++    src/utils/plotting.cpp
++    src/map_cost.cpp
++    src/communication.cpp
++    src/planner_info_to_controller_t.c
++    src/controller_info_to_planner_t.c
++    src/driver.cpp
++    src/control_commands.cpp
++    src/lie_group.cpp
++)
++add_dependencies(test_rviz_tool ${${PROJECT_NAME}_EXPORTED_TARGETS}
++    ${catkin_EXPORTED_TARGETS})
++target_link_libraries(test_rviz_tool ${catkin_LIBRARIES} ${PCL_LIBRARIES}
++)
+ 
+ add_executable(unit_test src/unit_test.cpp src/fake_map.cpp
+     src/multivariate_gaussian.cpp src/clf_rrt.cpp src/cassie_rrt_tree.cpp src/lyapunov_distance.cpp
+diff --git a/config/local_map.yaml b/config/local_map.yaml
+index 33c2c4a..de338f3 100644
+--- a/config/local_map.yaml
++++ b/config/local_map.yaml
+@@ -7,6 +7,7 @@ local_map:
+   #    <often use on flat ground>
+   # 5: include mode1, mode2 and then assign a cell as unknown if any obstacle exists
+   #    between the cell and the robot
++  # 6: include mode1, mode2, and publish plane information
+   mode: 5 
+   obstacle_threshold: 0.3 # cost beyond this (0.5), will be considered obstacles
+   length: 6 # length of local map, including front and back (being too small will result in too much computation time) 
+diff --git a/include/utils/line.h b/include/utils/line.h
+index e58a0e8..e5298a4 100644
+--- a/include/utils/line.h
++++ b/include/utils/line.h
+@@ -200,13 +200,7 @@ namespace line
+         
+         return points;
+     }
+-
+-
+-
+-
+-    
+ } /* line */ 
+-    
+ } /* bipedlab */ 
+ 
+ 
+diff --git a/include/utils/plane.h b/include/utils/plane.h
+new file mode 100644
+index 0000000..f787a96
+--- /dev/null
++++ b/include/utils/plane.h
+@@ -0,0 +1,199 @@
++/* Copyright (C) 2013-2020, The Regents of The University of Michigan.
++ * All rights reserved.
++ * This software was developed in the Biped Lab (https://www.biped.solutions/)
++ * under the direction of Jessy Grizzle, grizzle@umich.edu. This software may
++ * be available under alternative licensing terms; contact the address above.
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are met:
++ * 1. Redistributions of source code must retain the above copyright notice, this
++ *    list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright notice,
++ *    this list of conditions and the following disclaimer in the documentation
++ *    and/or other materials provided with the distribution.
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
++ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
++ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
++ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ * The views and conclusions contained in the software and documentation are those
++ * of the authors and should not be interpreted as representing official policies,
++ * either expressed or implied, of the Regents of The University of Michigan.
++ *
++ * AUTHOR: Bruce JK Huang (bjhuang@umich.edu)
++ * WEBSITE: https://www.BrucebotStudio.com/
++ */
++#pragma once
++
++#ifndef PLANE_H
++#define PLANE_H 
++
++#include <cmath>
++#include <utility> // pair
++#include <memory> // shared_ptr
++#include <float.h> // FLT_MAX
++#include <eigen3/Eigen/Dense>
++#include <eigen3/Eigen/QR>
++#include "point.h"
++#include "pose.h"
++
++namespace bipedlab
++{
++namespace plane
++{
++    // PLANE REPRESENTATION 
++    //          normal_vector
++    //               \
++    //                \
++    //       ----------\---------------------     
++    //      /           \               o    /    
++    //     /                   fixed_point  /     
++    //    /                                /     
++    //   /                                /       
++    //  /                                /        
++    //  ---------------------------------         
++    //
++    struct plane_t 
++    {
++        // normal vector of this plane
++        Eigen::Vector3f normal_vector; // x, y, z
++
++        // a point on the plane
++        Eigen::Vector3f fixed_point; // x, y, z
++
++
++        plane_t(const Eigen::Vector3f &normal_vector, 
++                const Eigen::Vector3f &fixed_point):
++                normal_vector(normal_vector), fixed_point(fixed_point) { }
++
++        plane_t(const plane_t &copy):
++                normal_vector(copy.normal_vector), fixed_point(copy.fixed_point) { }
++
++        plane_t(void):
++                normal_vector(Eigen::Vector3f::Zero(3)), 
++                fixed_point(Eigen::Vector3f::Zero(3)) { }
++
++        std::vector<float>
++            getPlaneCoefficients(void) 
++        {
++            return std::vector<float>{this->normal_vector(0), this->normal_vector(1), 
++                                 this->normal_vector(2), this->fixed_point(2)};
++        }
++
++        void print(void) {
++            std::cout << "normal_vector: \n" << this->normal_vector << std::endl;
++            std::cout << "fixed_point: \n" << this->fixed_point << std::endl;
++        }
++        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
++    };
++
++
++
++    // TERRAIN PLANE REPRESENTATION 
++    //          normal_vector
++    //               \
++    //                \
++    //       ----------\---------------------     ^
++    //      /           \               o    /    |
++    //     /                   fixed_point  /     |
++    //    /                                /      | length
++    //   /            / \                 /       |
++    //  /              | robot_pose      /        |
++    //  ---------------------------------         v
++    //
++    //  <------------------------------->
++    //               width
++    // 
++    // 
++    struct terrain_plane_t : plane_t
++    {
++        // length of the plane (extending from robot pose toward its heading
++        // direction)
++        double length;
++
++        // width of the plane (extending from robot pose toward perpendicularly 
++        // toward it heading directing)
++        double width;
++
++        // robot pose when computing this plane
++        pose_t robot_pose;
++
++
++        // points
++        Eigen::MatrixXf points;
++
++        terrain_plane_t(const Eigen::Vector3f &normal_vector, 
++                        const Eigen::Vector3f &fixed_point,
++                        const double &length, const double &width,
++                        const pose_t &robot_pose):
++                plane_t(normal_vector, fixed_point),
++                length(length), width(width), robot_pose(robot_pose)
++        { }
++
++        terrain_plane_t(const plane_t &plane,
++                        const double &length, const double &width,
++                        const pose_t &robot_pose):
++                plane_t(plane),
++                length(length), width(width), robot_pose(robot_pose)
++        { }
++
++        terrain_plane_t(void): plane_t(), length(0), width(0), robot_pose()
++        {
++            // std::cout << "In terrain_plane_t default constructor\n";
++        }
++
++        // terrain_plane_t(const plane_t& copy) {
++        //     std::cout << "In terrain_plane_t copy constructor\n";
++        // }
++
++        terrain_plane_t& operator=(const plane_t& copy) {
++            this->normal_vector = copy.normal_vector;
++            this->fixed_point = copy.fixed_point;
++            return *this;
++        }
++
++        void print(void) {
++            std::cout << "normal_vector: \n" << this->normal_vector << std::endl;
++            std::cout << "fixed_point: \n" << this->fixed_point << std::endl;
++            std::cout << "(l, w): " << this->length << ", " << this->width << std::endl;
++            std::cout << "robot_pose: "; this->robot_pose.print(); 
++        }
++
++        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
++    };
++
++
++    // Points should be 3 x m format, where m is the number of points
++    inline
++    std::shared_ptr<plane_t> fitPlaneViaLeastSquares(const Eigen::MatrixXf &points)
++    {
++        // points = [xs
++        //           ys
++        //           zs]
++        std::shared_ptr<plane_t> fitted_plane(new plane_t);
++        size_t num_points = points.cols();  
++        Eigen::MatrixXf A = Eigen::MatrixXf::Ones(num_points, 3); // 1s, xs, ys
++        A.col(1) = points.row(0); // xs
++        A.col(2) = points.row(1); // ys
++        // std::cout << "A: \n"  << A << std::endl;
++        Eigen::VectorXf z = points.row(2).transpose().eval(); // zs
++        Eigen::MatrixXf b = A.bdcSvd(Eigen::ComputeThinU | 
++                     Eigen::ComputeThinV).solve(z);
++        // std::cout << "b: \n"  << b << std::endl;
++
++        // b1 * x + b2 * y - z + b0 = 0
++        fitted_plane->normal_vector = Eigen::Vector3f(b(1), b(2), -1);
++        fitted_plane->fixed_point = Eigen::Vector3f(0, 0, b(0));
++
++        return fitted_plane;
++    }
++
++
++
++} /* plane */ 
++} /* bipedlab */ 
++#endif /* ifndef PLANE_H */
+diff --git a/src/local_map.cpp b/src/local_map.cpp
+index fc952b2..bdec9eb 100644
+--- a/src/local_map.cpp
++++ b/src/local_map.cpp
+@@ -178,10 +178,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         this->local_map.setBasicLayers({"filtered_elevation_map"});
+     }
+ 
++
+     // smooth and slope (assign unknow = unknow_cost + robot.z)
+     if (local_map_info_.mode == 3)
+     {
+-
+         this->local_map.add("filtered_elevation_map", 0);
+         map_operation::averageNANFiltering(this->local_map, 
+                 this->local_map.getSize(),
+@@ -205,8 +205,9 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         this->local_map.setBasicLayers({"filtered_elevation_map"});
+     }
+ 
++
+     // smooth and use signed distnace to the cloest obstacles 
+-    // This do the smoothing first, computing SDF after computing obstalces
++    // This does the smoothing first, computing SDF after computing obstalces
+     if (local_map_info_.mode == 4)
+     {
+         this->local_map.add("filtered_elevation_map", 0);
+@@ -242,7 +243,24 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+     }
+ 
+ 
+-    // update occupancy map 
++    // smooth and plane computation 
++    if (local_map_info_.mode == 6)
++    {
++        this->local_map.add("filtered_elevation_map", 0);
++        map_operation::averageNANFiltering(this->local_map, 
++                this->local_map.getSize(),
++                this->local_map_info_.smooth_radius,
++                "elevation_map", "", 
++                local_map_info_.nan_percentage_in_radius, 
++                local_map_info_.cost_params.unknown_cost);
++        size_t num_NAN = map_operation::checkNAN(this->local_map, 
++                "filtered_elevation_map");
++        debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
++        this->local_map.setBasicLayers({"filtered_elevation_map"});
++    }
++
++
++    // update occupancy map for **ALL MODE**!!!!!!!!!!!!!1
+     std::string elevaion_map_name = "elevation_map";
+     if (local_map_info_.mode == 2 || local_map_info_.mode == 3)
+     {
+@@ -256,6 +274,10 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+             elevaion_map_name, "occupancy_map",
+             local_map_info_.obstacle_threshold, has_nan);
+ 
++
++
++
++    // check if map contains nan values
+     if (has_nan && local_map_info_.mode == 0)
+     {
+         debugger::debugColorTextOutput("[LocalMap] "
+@@ -269,6 +291,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+         exit(-1);
+     }
+ 
++    // compute signed distance after assigning obstacles
+     if (local_map_info_.mode == 4)
+     {
+         map_operation::computeSignedDistnaceField(this->local_map, 
+@@ -277,6 +300,7 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+                 "occupancy_map", "filtered_elevation_map");
+     }
+ 
++    // bresham line algorithm to assign unknown behind obstalces
+     if (local_map_info_.mode == 5)
+     {
+         grid_map::Index index;
+@@ -287,6 +311,33 @@ void LocalMap::updateLocalMap(const pose_t& current_pose)
+     }
+ 
+ 
++
++    if (local_map_info_.mode == 6)
++    {
++        this->local_map.add("filtered_elevation_map", 0);
++        map_operation::averageNANFiltering(this->local_map, 
++                this->local_map.getSize(),
++                this->local_map_info_.smooth_radius,
++                "elevation_map", "", 
++                local_map_info_.nan_percentage_in_radius, 
++                current_pose.z + local_map_info_.cost_params.unknown_cost);
++        // size_t num_NAN = map_operation::checkNAN(this->local_map, 
++        //         "filtered_elevation_map");
++        // debugger::debugColorOutput("[LocalMap] num_NAN: ", num_NAN, 5, W, BOLD);
++
++
++        this->local_map.setBasicLayers({"filtered_elevation_map"});
++        this->local_map.add("filtered_slope", 0);
++
++
++        map_operation::computeSlopeWRTRobotPose(this->local_map, 
++                this->local_map.getSize(),
++                "filtered_elevation_map", "filtered_slope",
++                current_pose);
++        this->local_map.setBasicLayers({"filtered_elevation_map"});
++    }
++
++
+ }
+ 
+ // the order of vertices are (0, 0), (0, 1), (1, 1), (1, 0) in the grid map
+diff --git a/src/test_rviz_tool.cpp b/src/test_rviz_tool.cpp
+new file mode 100644
+index 0000000..8a39ac3
+--- /dev/null
++++ b/src/test_rviz_tool.cpp
+@@ -0,0 +1,164 @@
++// ROS
++#include <ros/ros.h>
++
++// For visualizing things in rviz
++#include <rviz_visual_tools/rviz_visual_tools.h>
++
++// C++
++#include <string>
++#include <vector>
++
++#include <eigen3/Eigen/Dense> // SVD
++#include <eigen3/Eigen/StdVector>
++#include <eigen3/Eigen/Eigenvalues>
++
++#include <tf2/LinearMath/Matrix3x3.h>
++#include <tf2/LinearMath/Quaternion.h>
++#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
++
++
++
++#include "fake_map.h"
++#include "lie_group.h"
++#include "map_cost.h"
++#include "utils/plotting.h"
++#include "utils/debugger.h"
++#include "utils/utils.h"
++#include "utils/line.h"
++#include "utils/plane.h"
++#include "clf_rrt.h"
++#include "csv.h"
++#include "point.h"
++
++
++// 0-4 general debugging purposes
++// 5-8: algorithm status/process
++int DEBUG_LEVEL = 3;
++
++
++namespace rvt = rviz_visual_tools;
++using namespace bipedlab;
++
++namespace rviz_visual_tools
++{
++
++class RvizVisualToolsDemo
++{
++    private:
++        // A shared node handle
++        ros::NodeHandle nh_;
++
++        // For visualizing things in rviz
++        rvt::RvizVisualToolsPtr visual_tools_;
++
++        std::string name_;
++
++    public:
++        /**
++         * \brief Constructor
++         */
++        RvizVisualToolsDemo() : name_("rviz_demo") 
++    {
++        visual_tools_.reset(new rvt::RvizVisualTools("world", "/rviz_visual_tools"));
++        visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++        ROS_INFO("Sleeping 5 seconds before running demo");
++        ros::Duration(5.0).sleep();
++
++        // Clear messages
++        visual_tools_->deleteAllMarkers();
++        visual_tools_->enableBatchPublishing();
++    }
++
++        void publishLabelHelper(const Eigen::Isometry3d& pose, const std::string& label)
++        {
++            Eigen::Isometry3d pose_copy = pose;
++            pose_copy.translation().x() -= 0.2;
++            visual_tools_->publishText(pose_copy, label, rvt::WHITE, rvt::XXLARGE, false);
++        }
++
++        void testRows(double& x_location)
++        {
++            debugger::debugOutput("[Unit test] ", "Plane Fitting", 5);
++            plane::plane_t test_plane;
++            test_plane.print();
++
++            Eigen::MatrixXf test_points(3, 6); // input points
++            test_points << 0, 1, 3, 5, 7, 9,
++                        0, 2, 4, 6, 8, 10,
++                        0, 3, 6, 9, 12, 15;
++            std::cout << "points: " << test_points << std::endl;
++            auto plane_params = plane::fitPlaneViaLeastSquares(test_points);
++            plane_params->print(); // from matlab: 1.7764e-15          1.5           -1  -1.1552e-15
++            std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++
++            // rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
++            // visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base_frame","/rviz_visual_markers"));
++            // visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++            // Clear messages
++            // visual_tools_->deleteAllMarkers();
++            // visual_tools_->enableBatchPublishing();
++
++            visual_tools_->publishABCDPlane(plane_coefficients[0],
++                    plane_coefficients[1],
++                    plane_coefficients[2],
++                    plane_coefficients[3]);
++
++            // Create pose
++            // Eigen::Isometry3d pose1 = Eigen::Isometry3d::Identity();
++            // Eigen::Isometry3d pose2 = Eigen::Isometry3d::Identity();
++
++            // pose1.translation().x() = x_location;
++
++            // double space_between_rows = 0.2;
++            // double y = 0;
++            // double step;
++
++
++            // // --------------------------------------------------------------------
++            // ROS_INFO_STREAM_NAMED(name_, "Displaying Planes");
++            // pose1 = Eigen::Isometry3d::Identity();
++            // y += space_between_rows;
++            // pose1.translation().y() = y;
++            // step = 0.2;
++            // double max_plane_size = 0.075;
++            // double min_plane_size = 0.01;
++            // for (double i = 0; i <= 1.0; i += step)
++            // {
++            //     visual_tools_->publishXYPlane(pose1, rvt::RED, i * max_plane_size + min_plane_size);
++            //     visual_tools_->publishXZPlane(pose1, rvt::GREEN, i * max_plane_size + min_plane_size);
++            //     visual_tools_->publishYZPlane(pose1, rvt::BLUE, i * max_plane_size + min_plane_size);
++            //     if (i == 0.0)
++            //     {
++            //         publishLabelHelper(pose1, "Planes");
++            //     }
++
++            //     pose1.translation().x() += step;
++            // }
++            visual_tools_->trigger();
++        }
++
++};  // end class
++
++}  // namespace rviz_visual_tools
++
++int main(int argc, char** argv)
++{
++    ros::init(argc, argv, "visual_tools_demo");
++    ROS_INFO_STREAM("Visual Tools Demo");
++
++    // Allow the action server to recieve and send ros messages
++    ros::AsyncSpinner spinner(1);
++    spinner.start();
++
++    rviz_visual_tools::RvizVisualToolsDemo demo;
++
++    double x_location = 0;
++    demo.testRows(x_location);
++
++    ROS_INFO_STREAM("Shutting down.");
++
++    return 0;
++}
++
+diff --git a/src/unit_test.cpp b/src/unit_test.cpp
+index f6b9825..da7e37a 100644
+--- a/src/unit_test.cpp
++++ b/src/unit_test.cpp
+@@ -65,15 +65,19 @@
+ #include "utils/debugger.h"
+ #include "utils/utils.h"
+ #include "utils/line.h"
++#include "utils/plane.h"
+ #include "clf_rrt.h"
++#include "point.h"
+ #include "csv.h"
+ #include "point.h"
+ 
++#include "rviz_visual_tools/rviz_visual_tools.h"
++
+ 
+ 
+ // 0-4 general debugging purposes
+ // 5-8: algorithm status/process
+-int DEBUG_LEVEL = 3; 
++int DEBUG_LEVEL = 3;
+ 
+ using namespace bipedlab;
+ // typedef velodyne_pointcloud::PointXYZIR PointXYZRI;
+@@ -85,6 +89,182 @@ int main(int argc, char *argv[]) {
+     ros::NodeHandle nh;
+     // std::cout << DEBUG_LEVEL << std::endl;
+ 
++   // debugger::debugOutput("[Unit test] ", "Least Squares", 5);
++   // Eigen::MatrixXf A = Eigen::MatrixXf::Random(3, 2);
++   // std::cout << "Here is the matrix A:\n" << A << std::endl;
++   // Eigen::VectorXf b = Eigen::VectorXf::Random(3);
++   // std::cout << "Here is the right hand side b:\n" << b << std::endl;
++   // std::cout << "The least-squares solution is:\n"
++   //      << A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b) << std::endl;
++
++
++
++   // For visualizing things in rviz
++
++
++   debugger::debugTitleTextOutput("[Unit test] ", "Plane Fitting", 5);
++   // plane::plane_t test_plane;
++   // test_plane.print();
++   int dataset = 2;
++
++   Eigen::MatrixXd lidar_points; // input points
++   double y_width = 2;
++   if (dataset == 1)
++   {
++       Eigen::MatrixXd test_points(3, 8); // input points
++       test_points <<
++           0.014047, 0.53454, 0.5782, 0.06592, 0.00070, 0.42795, 0.73865, 0.84611,
++           0.047974, 0.83191, 0.4617, 0.45222, 0.33814, 0.67403, 0.52019, 0.45547,
++           0.677590, 0.27622, 0.7249, 0.80713, 0.34365, 0.47471, 0.29546, 0.20986;
++       lidar_points = test_points;
++   }
++   else if (dataset == 2)
++   {
++       size_t num_test_points = 10000;
++       auto xs = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, -1, 3);
++       auto ys = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
++                                                               -y_width/2, y_width/2);
++       auto z_noise = utils::genListOfInclusiveRandomNumbers<float>(num_test_points, 
++                                                               -0.05, 0.05);
++       std::vector<float> zs(num_test_points, 0);
++       double k1 = 1;
++       double k2 = 0;
++       for (int i = 0; i < num_test_points; ++i)
++       {
++           zs[i] = std::cos(k1 * xs[i]) * std::cos(k2 * ys[i]) + z_noise[i];
++       }
++
++       Eigen::MatrixXf test_points(3, num_test_points);
++       float* xs_ptr = &xs[0];
++       test_points.row(0) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(xs.data(), xs.size());
++
++       float* ys_ptr = &ys[0];
++       test_points.row(1) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(ys.data(), ys.size());
++
++       float* zs_ptr = &zs[0];
++       test_points.row(2) = Eigen::Map<Eigen::VectorXf, Eigen::Unaligned>(zs.data(), zs.size());
++       lidar_points = test_points.cast<double>();
++   }
++
++   // robot pose
++   pose_t robot_pose(0, 0, deg_to_rad(0));
++   Eigen::Vector2f robot_pose_vec = Eigen::Vector2f(std::cos(robot_pose.theta),
++                                                    std::sin(robot_pose.theta));
++
++
++
++
++   // plane fitting
++   int max_step = 5;
++   double increment = 0.3;
++   double delta_y = 0.3;
++   size_t num_points = lidar_points.cols();
++   std::vector<plane::terrain_plane_t> terrain_plane_vec(max_step);
++   std::vector<std::vector<Eigen::Vector3f>> segment_points(max_step);
++
++   for (int i = 0; i < num_points; ++i)
++   {
++       Eigen::Vector2f v = lidar_points.block(0, i, 2, 1).cast<float>() - Eigen::Vector2f(robot_pose.x, robot_pose.y);
++       double distance = v.norm();
++       double x_distance = robot_pose_vec.dot(v);
++
++       double theta = std::acos(x_distance / std::max(distance, 1e-5));
++       double y_distance = distance * std::sin(theta);
++       if (y_distance > delta_y || x_distance < 0)
++           continue;
++
++
++       // int k = -1;
++       // if (x_distance >= 0 && x_distance <= increment)
++       // {
++       //     k = 0;
++       // }
++       // else if (x_distance >= 1 * increment && x_distance <= 2 * increment)
++       //     k = 1;
++       // else if (x_distance >= 2 * increment && x_distance <= 3 * increment)
++       //     k = 2;
++       // else if (x_distance >= 3 * increment && x_distance <= 4 * increment)
++       //     k = 3;
++       // else if (x_distance >= 4 * increment && x_distance <= 5 * increment)
++       //     k = 4;
++       // else
++       // {
++       //     continue;
++       //     // std::string error_msg = "No such distnace: " + std::to_string(k);
++       //     // debugger::debugExitColor(error_msg, __LINE__, __FILE__);
++       // }
++       int k = std::floor(x_distance / increment);
++       if (k < max_step)
++       {
++           segment_points[k].push_back(lidar_points.col(i).cast<float>());
++       }
++   }
++
++   // plane fitting
++   
++   for (int seg = 0; seg < max_step; ++seg)
++   {
++       size_t num_seg = segment_points[seg].size();
++       Eigen::MatrixXf seg_points = Eigen::MatrixXf(3, num_seg);
++       for (int i = 0; i < num_seg; ++i)
++       {
++           seg_points.col(i) = segment_points[seg][i];
++       }
++       terrain_plane_vec[seg].points = seg_points;
++       auto plane_params = plane::fitPlaneViaLeastSquares(terrain_plane_vec[seg].points);
++       std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++       // terrain_plane_vec[seg].normal_vector = plane_params->normal_vector;
++       // terrain_plane_vec[seg].fixed_point = plane_params->fixed_point;
++
++       terrain_plane_vec[seg] = *plane_params;
++   }
++   // lidar_points = seg_points;
++
++
++   // plane_params->print(); // from matlab: 1.7764e-15          1.5           -1  -1.1552e-15
++   // std::vector<float> plane_coefficients = plane_params->getPlaneCoefficients();
++
++
++   // viz
++   rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
++   visual_tools_.reset(new rviz_visual_tools::RvizVisualTools("base","/rviz_visual_markers"));
++   visual_tools_->loadMarkerPub();  // create publisher before waiting
++
++   // Clear messages
++   visual_tools_->deleteAllMarkers();
++   visual_tools_->enableBatchPublishing();
++
++   // publish all points
++   for (int i = 0; i < lidar_points.cols(); ++i) {
++       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
++       std_msgs::ColorRGBA color = visual_tools_->getColor(rviz_visual_tools::WHITE);
++       visual_tools_->publishSphere(lidar_points.col(i), color, scale, "all points");
++   }
++
++   // publish plane information
++   for (int seg = 0; seg < max_step; ++seg)
++   {
++       geometry_msgs::Vector3 scale = visual_tools_->getScale(rviz_visual_tools::MEDIUM);
++       std_msgs::ColorRGBA color = visual_tools_->getColorScale((float) seg / max_step);
++       for (int i = 0; i < terrain_plane_vec[seg].points.cols(); ++i)
++       {
++           visual_tools_->publishSphere(
++                   terrain_plane_vec[seg].points.col(i).cast<double>(),
++                   color, scale, "seg points");
++       }
++       std::vector<float> plane_coefficients = 
++           terrain_plane_vec[seg].getPlaneCoefficients();
++       Eigen::Vector3d center = terrain_plane_vec[seg].points.rowwise().mean().cast<double>();
++       visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
++               plane_coefficients[1],
++               plane_coefficients[2],
++               plane_coefficients[3], center, color, increment, 2*delta_y);
++   }
++   visual_tools_->trigger();
++   exit(0);
++
++
++
+ 
+     // debugger::debugOutput("[Unit test] Quaternion", "", 5);
+     // tf2::Quaternion q;
+@@ -182,7 +362,7 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     // test assignUnknownBehindObstacles
+-    
++
+ 
+     // test coimputeBresenham
+     auto points = line::coimputeBresenham(0, 0, -5, 0);
+@@ -203,8 +383,8 @@ int main(int argc, char *argv[]) {
+ 
+     // test Eigen SVD
+     Eigen::Matrix3f M; // input matrix
+-    M <<        0,         0,        0, 
+-        -0.660054, -0.510275, 0.651784,   
++    M <<        0,         0,        0,
++        -0.660054, -0.510275, 0.651784,
+          0.631292,  0.154421,  0.80545;
+ 
+     Eigen::Matrix3f U; // save for comparision
+@@ -243,14 +423,14 @@ int main(int argc, char *argv[]) {
+         assert((V - svd.matrixV()).norm() < 1e-5);
+     }
+ 
+-    
++
+ 
+ 
+     // test angle from std
+     double p_x = 0;
+     double p_y = 0;
+ 
+-    // I 
++    // I
+     double p1_x = 1;
+     double p1_y = 3;
+     double dis_p1_p = std::sqrt((p1_x - p_x) * (p1_x - p_x) + (p1_y - p_y) * (p1_y - p_y));
+@@ -286,7 +466,7 @@ int main(int argc, char *argv[]) {
+     // -y-axis
+     double p8_x = 0;
+     double p8_y = -1;
+-    
++
+ 
+     // double theta1 = std::asin((p1_x - p_x) / dis_p1_p);
+     // double theta2 = M_PI + std::asin((p2_x - p_x) / dis_p2_p);
+@@ -297,46 +477,46 @@ int main(int argc, char *argv[]) {
+     // debugger::debugOutput("theta3: ", theta3, 5);
+     // debugger::debugOutput("theta4: ", theta4, 5);
+ 
+-    debugger::debugOutput("theta1 from pi function: ", 
++    debugger::debugOutput("theta1 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p1_x, p1_y), 5);
+-    debugger::debugOutput("theta2 from pi function: ", 
++    debugger::debugOutput("theta2 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p2_x, p2_y), 5);
+-    debugger::debugOutput("theta3 from pi function: ", 
++    debugger::debugOutput("theta3 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p3_x, p3_y), 5);
+-    debugger::debugOutput("theta4 from pi function: ", 
++    debugger::debugOutput("theta4 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p4_x, p4_y), 5);
+ 
+-    debugger::debugOutput("theta5 from pi function: ", 
++    debugger::debugOutput("theta5 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p5_x, p5_y), 5);
+-    debugger::debugOutput("theta6 from pi function: ", 
++    debugger::debugOutput("theta6 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p6_x, p6_y), 5);
+-    debugger::debugOutput("theta7 from pi function: ", 
++    debugger::debugOutput("theta7 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p7_x, p7_y), 5);
+-    debugger::debugOutput("theta8 from pi function: ", 
++    debugger::debugOutput("theta8 from pi function: ",
+             angle_between_two_points_and_x_axis_pi(p_x, p_y, p8_x, p8_y), 5);
+ 
+-    debugger::debugOutput("theta1 from 2pi function: ", 
++    debugger::debugOutput("theta1 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p1_x, p1_y), 5);
+-    debugger::debugOutput("theta2 from 2pi function: ", 
++    debugger::debugOutput("theta2 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p2_x, p2_y), 5);
+-    debugger::debugOutput("theta3 from 2pi function: ", 
++    debugger::debugOutput("theta3 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p3_x, p3_y), 5);
+-    debugger::debugOutput("theta4 from 2pi function: ", 
++    debugger::debugOutput("theta4 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p4_x, p4_y), 5);
+-    
+-    debugger::debugOutput("theta5 from 2pi function: ", 
++
++    debugger::debugOutput("theta5 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p5_x, p5_y), 5);
+-    debugger::debugOutput("theta6 from 2pi function: ", 
++    debugger::debugOutput("theta6 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p6_x, p6_y), 5);
+-    debugger::debugOutput("theta7 from 2pi function: ", 
++    debugger::debugOutput("theta7 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p7_x, p7_y), 5);
+-    debugger::debugOutput("theta8 from 2pi function: ", 
++    debugger::debugOutput("theta8 from 2pi function: ",
+             angle_between_two_points_and_x_axis_2pi(p_x, p_y, p8_x, p8_y), 5);
+ 
+ 
+     exit(0);
+ 
+-    
++
+     // publishers
+     ros::Publisher map_pub = nh.advertise<grid_map_msgs::GridMap>(
+             "world_map", 1, true);
+@@ -344,22 +524,22 @@ int main(int argc, char *argv[]) {
+             "local_map", 1, true);
+     // ros::Publisher debug_pub = nh.advertise<grid_map_msgs::GridMap>(
+     //         "debug", 1, true);
+-    ros::Publisher path_pub = 
++    ros::Publisher path_pub =
+         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("path_points", 1);
+-    ros::Publisher search_pub = 
++    ros::Publisher search_pub =
+         nh.advertise<pcl::PointCloud<pcl::PointXYZI>> ("search_points", 1);
+-    ros::Publisher marker_pub = 
++    ros::Publisher marker_pub =
+         nh.advertise<visualization_msgs::MarkerArray>("results", 10);
+ 
+ 
+     // markers
+     visualization_msgs::Marker marker;
+     visualization_msgs::MarkerArray marker_array;
+-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
++    pcl::PointCloud<pcl::PointXYZI>::Ptr
+         path_points (new pcl::PointCloud<pcl::PointXYZI>);
+     path_points->header.frame_id = "odom";
+ 
+-    pcl::PointCloud<pcl::PointXYZI>::Ptr 
++    pcl::PointCloud<pcl::PointXYZI>::Ptr
+         search_points (new pcl::PointCloud<pcl::PointXYZI>);
+     search_points->header.frame_id = "odom";
+ 
+@@ -371,14 +551,14 @@ int main(int argc, char *argv[]) {
+     double goal_bias = 0.2;
+     double distance_threshold_for_sampling = 0;
+ 
+-    pose_sampler_params_t pose_sampler_params(goal_bias, 
++    pose_sampler_params_t pose_sampler_params(goal_bias,
+                                               distance_threshold_for_sampling);
+ 
+     // rrt params
+     size_t mode = 1;
+     size_t num_samples = SIZE_MAX;
+     double allowed_computation_time = 120; // in seconds
+-    bool terminate_if_path = false; 
++    bool terminate_if_path = false;
+ 
+ 
+     rrt_params_t rrt_params;
+@@ -410,11 +590,11 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     LyapunovDistance* lyap_dist = new LyapunovDistance();
+-    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map), 
++    LocalMap* local_map = new LocalMap(&pose1, (fake_map->map),
+                                        local_map_info);
+     exit(-1);
+     MapCost* map_cost = new MapCost(local_map, rrt_params.mode);
+-    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map, 
++    LyapunovPath* lyap_path = new LyapunovPath(*lyap_dist, *local_map,
+                                                *map_cost, rrt_params.mode);
+ 
+     // LyapunovDistance() is declared here for speed
+@@ -469,10 +649,10 @@ int main(int argc, char *argv[]) {
+     // load rrt
+     // robot_state_t robot_state(fake_map->start);
+     // CLFRRTStarPlanner* planner = new CLFRRTStarPlanner(
+-    //         *(fake_map->map), length_of_local_map, 
++    //         *(fake_map->map), length_of_local_map,
+     //         pose_6dof_t(fake_map->start), pose_6dof_t(fake_map->goal),
+     //         robot_state, pose_sampler_params, rrt_params);
+-    
++
+     // grid_map::GridMap local_map({"test"});
+     // local_map.setFrameId(planner->getLocalMap().getFrameId());
+     // local_map["test"] = (planner->getLocalMap())["elevation"];
+@@ -484,22 +664,22 @@ int main(int argc, char *argv[]) {
+ 
+ 
+     // show targets
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose1", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose1",
+               0, 1, 0, 1, // color
+               pose1, // pose
+               0, 0 // count, time
+               );
+     marker_array.markers.push_back(marker);
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose2", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose2",
+               0, 1, 1, 1, // color
+               pose2,
+               0, 0 // count, time
+               );
+     marker_array.markers.push_back(marker);
+-    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-              "pose3", 
++    plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++              "pose3",
+               0, 1, 1, 1, // color
+               pose3,
+               0, 0 // count, time
+@@ -527,18 +707,18 @@ int main(int argc, char *argv[]) {
+         // search locally
+         bool is_locally_free = true;
+         grid_map::Position center(it.x, it.y);
+-        
++
+         if (local_map->local_map.atPosition("occupancy_map", center) == 1)
+             is_locally_free = false;
+         else
+         {
+             search_points->points.clear();
+             for (grid_map::CircleIterator iterator(local_map->local_map, center, radius);
+-                    !iterator.isPastEnd(); ++iterator) 
++                    !iterator.isPastEnd(); ++iterator)
+             {
+                 grid_map::Position position;
+                 local_map->local_map.getPosition(*iterator, position);
+-                if (local_map->local_map.at("occupancy_map", *iterator) == 1) 
++                if (local_map->local_map.at("occupancy_map", *iterator) == 1)
+                 {
+                     is_locally_free = false;
+                     search_points->points.push_back(pcl::PointXYZI(
+@@ -551,7 +731,7 @@ int main(int argc, char *argv[]) {
+                 }
+             }
+         }
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                search_points->header.stamp);
+         path_pub.publish(search_points);
+         search_pub.publish(search_points);
+@@ -568,14 +748,14 @@ int main(int argc, char *argv[]) {
+                 (float) it.x, (float) it.y, 1.5, 255));
+             debugger::debugTextOutput("[main] point free", 0);
+         }
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                path_points->header.stamp);
+         path_pub.publish(path_points);
+         // utils::pressEnterToContinue();
+     }
+ 
+-    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-    //           "sample pose", 
++    // plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++    //           "sample pose",
+     //           0, 1, 1, 1, // color
+     //           planner->sample_pose_testing,
+     //           0, 0 // count, time
+@@ -584,14 +764,14 @@ int main(int argc, char *argv[]) {
+ 
+     // if (planner->getPathStatus())
+     // {
+-    //     std::vector<point2d_t<double>> path = planner->getPlannedPath(); 
+-    //     std::vector<std::pair<pose_t, bool>> waypoints = 
+-    //         planner->getPlannedWaypoints(); 
++    //     std::vector<point2d_t<double>> path = planner->getPlannedPath();
++    //     std::vector<std::pair<pose_t, bool>> waypoints =
++    //         planner->getPlannedWaypoints();
+ 
+     //     for (const auto& it : path)
+     //     {
+-    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE, 
+-    //         //         "planned path", 
++    //         // plotting::addMarker(marker, visualization_msgs::Marker::SPHERE,
++    //         //         "planned path",
+     //         //         0, 0, 0, 0, // color
+     //         //         it.x, it.y, 0, // location
+     //         //         0, 0, 0, 1, // quaternion
+@@ -607,8 +787,8 @@ int main(int argc, char *argv[]) {
+     //     size_t count = 0;
+     //     for (const auto& it : waypoints)
+     //     {
+-    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW, 
+-    //                 "waypoints", 
++    //         plotting::addMarkerWithPose(marker, visualization_msgs::Marker::ARROW,
++    //                 "waypoints",
+     //                 1, 1, 0, 1, // color
+     //                 pose_t(it.first),
+     //                 count, 0 // count, time
+@@ -623,7 +803,7 @@ int main(int argc, char *argv[]) {
+     while (nh.ok())
+     {
+         ros::Time time = ros::Time::now();
+-        pcl_conversions::toPCL(time, 
++        pcl_conversions::toPCL(time,
+                                path_points->header.stamp);
+         path_pub.publish(path_points);
+ 
+@@ -646,6 +826,6 @@ int main(int argc, char *argv[]) {
+         ros::spinOnce();
+         loop_rate.sleep();
+     }
+-    
++
+     return 0;
+ }

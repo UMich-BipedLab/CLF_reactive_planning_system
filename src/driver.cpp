@@ -71,7 +71,12 @@ Driver::Driver(ros::NodeHandle& nh):
     else
     {
         debugger::debugColorOutput("[Driver] Received all parameters", "", 10, BC);
+
     }
+
+    debugger::debugColorOutput("[Driver] Using EIGEN_WORLD_VERSION: ", EIGEN_WORLD_VERSION, 10, BC);
+    debugger::debugColorOutput("[Driver] Using EIGEN_MAJOR_VERSION: ", EIGEN_MAJOR_VERSION, 10, BC);
+    debugger::debugColorOutput("[Driver] Using EIGEN_MINOR_VERSION: ", EIGEN_MINOR_VERSION, 10, BC);
 
     if (log_commands_ == 1)
     {
@@ -152,6 +157,14 @@ Driver::Driver(ros::NodeHandle& nh):
         nh_.advertise<pcl::PointCloud<pcl::PointXYZI>> ("planner_path_points", 1);
     planner_command_pub_ = nh_.advertise<planner_msgs::State> ("planner_commands", 1);
 
+    // rviz tool
+    visual_tools_.reset(new rviz_visual_tools::RvizVisualTools(map_frame_,"/rviz_visual_markers"));
+    visual_tools_->loadMarkerPub();  // create publisher before waiting
+
+
+
+    // planner_terrain_pub_ = nh_.advertise<planner_msgs::TerrainArray> ("planner_terrain", 1);
+
     marker_pub_ = nh_.advertise<visualization_msgs::Marker>(
             "visualization_marker", 10);
     marker_array_pub_ = nh_.advertise<visualization_msgs::MarkerArray>(
@@ -194,7 +207,8 @@ Driver::Driver(ros::NodeHandle& nh):
     // std::cout << "[In driver.cpp before Planner()] &multi_layer_map_ = " << &multi_layer_map_ << std::endl;
     planner_ = new CLFRRTStarPlanner(multi_layer_map_, local_map_params_,
             robot_state_.pose, robot_state_.pose, robot_state_, 
-            pose_sampler_params_, rrt_params_, cost_map_params_, lyap_dist_params_);
+            pose_sampler_params_, rrt_params_, cost_map_params_, lyap_dist_params_,
+            terrain_plane_params_);
     // std::cout << "[In driver.cpp after Planner()] planner_->printGlobalMapCLFAddress():" << std::endl;
     // planner_->printGlobalMapCLFAddress();
     // std::cout << std::endl;
@@ -449,9 +463,30 @@ void Driver::publishInfoToRobot_()
                         planner_info_to_controller_));
         }
 
-        planner_command_pub_.publish(
-                control_commands::convertToPlannerMsg(
-                    planner_info_to_controller_, ros::Time::now(), map_frame_));
+        if (local_map_params_.mode <= 5)
+        {
+            planner_command_pub_.publish(
+                    control_commands::convertToPlannerMsg(
+                        planner_info_to_controller_, ros::Time::now(), map_frame_));
+        }
+        else if (local_map_params_.mode == 6 || local_map_params_.mode == 7)
+        {
+
+            // debugger::debugOutput("[prepareInfo] control command: ", "before", 5);
+            planner_->local_map_->lockTerrainThread(true);
+            planner_command_pub_.publish(
+                    control_commands::convertToPlannerMsgWithPlane(
+                        planner_info_to_controller_, 
+                        planner_->local_map_->terrain_info, 
+                        ros::Time::now(), map_frame_));
+            planner_->local_map_->lockTerrainThread(false);
+        }
+        else
+        {
+            std::string error_msg = "No such mode: " +
+                std::to_string(local_map_params_.mode);
+            debugger::debugExitColor(error_msg, __LINE__, __FILE__);
+        }
 
         if (log_commands_)
         {
@@ -1890,6 +1925,84 @@ void Driver::publishToRviz_()
     rrt_path_pub_.publish(rrt_path_points);
     planner_path_pub_.publish(planner_path_points);
     trajectory_pub_.publish(robot_trajectory_);
+
+
+
+    // plane information 
+    // Clear messages
+    visual_tools_->resetMarkerCounts();
+    visual_tools_->deleteAllMarkers();
+    visual_tools_->enableBatchPublishing();
+
+    planner_->local_map_->lockTerrainThread(true);
+    std::vector<plane::terrain_info_t> terrain_info = planner_->local_map_->terrain_info;
+    planner_->local_map_->lockTerrainThread(false);
+
+    // publish plane information
+    for (int seg = 0; seg < terrain_plane_params_.num_planes; ++seg)
+    {
+        // skip if status is -1
+        if (terrain_info[seg].status == 0)
+            continue;
+        size_t num_seg_points = terrain_info.at(seg).points.cols();
+
+        // geometry_msgs::Vector3 scale = 
+        //     visual_tools_->getScale(rviz_visual_tools::XXXXLARGE);
+        geometry_msgs::Vector3 scale = 
+            visual_tools_->getScale(rviz_visual_tools::XLARGE);
+        std_msgs::ColorRGBA color = 
+            visual_tools_->getColorScale(
+                    (float) seg / terrain_plane_params_.num_planes);
+        // debugger::debugColorOutput("[Driver]/publishToRviz] # points: ", 
+        //         terrain_info.at(seg).points.cols(), 6, BC);
+        for (int i = 0; i < num_seg_points; ++i)
+        {
+            visual_tools_->publishSphere(
+                    terrain_info.at(seg).points.col(i).cast<double>(),
+                    color, scale, "plane points - " + std::to_string(seg), i);
+        }
+        std::vector<float> plane_coefficients =
+            terrain_info.at(seg).getPlaneCoefficients();
+        Eigen::Vector3d center = terrain_info.at(seg).points.rowwise().mean().cast<double>();
+        visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
+                plane_coefficients[1],
+                plane_coefficients[2],
+                plane_coefficients[3], center, color, 
+                terrain_plane_params_.delta_x, 2 * terrain_plane_params_.delta_y);
+    }
+    visual_tools_->trigger();
+
+
+
+
+    // std::shared_ptr<std::vector<plane::terrain_info_t>>
+    //     terrain_ptr = local_map_->getTerrainInfo();
+    // for (int seg = 0; seg < terrain_plane_params_.num_planes; ++seg)
+    // {
+    //     geometry_msgs::Vector3 scale = 
+    //         visual_tools_->getScale(rviz_visual_tools::MEDIUM);
+    //     std_msgs::ColorRGBA color = 
+    //         visual_tools_->getColorScale(
+    //                 (float) seg / terrain_plane_params_.num_planes);
+
+    //     for (int i = 0; i < terrain_ptr->at(seg).points.cols(); ++i)
+    //     {
+    //         visual_tools_->publishSphere(
+    //                 terrain_ptr->at(seg).points.col(i).cast<double>(),
+    //                 color, scale, "plane points");
+    //     }
+    //     std::vector<float> plane_coefficients =
+    //         terrain_ptr->at(seg).getPlaneCoefficients();
+    //     Eigen::Vector3d center = terrain_ptr->at(seg).points.rowwise().mean().cast<double>();
+    //     visual_tools_->publishABCDPlaneWithCenter(plane_coefficients[0],
+    //             plane_coefficients[1],
+    //             plane_coefficients[2],
+    //             plane_coefficients[3], center, color, 
+    //             terrain_plane_params_.delta_x, 2 * terrain_plane_params_.delta_y);
+    // }
+    // visual_tools_->trigger();
+
+
 }
 
 
@@ -1908,8 +2021,8 @@ bool Driver::updateGlobalMap_()
     else
     {
         status = false;
-        debugger::debugColorOutput("[Driver]/[updateGlobalMap] "
-                "No new map: using the existing map", "", 10, Y);
+        debugger::debugWarningOutput("[Driver]/[updateGlobalMap] "
+                "No new map: using the existing map", "", 10);
     }
     global_map_updated_ = false;
     map_lock_.unlock();
@@ -2039,8 +2152,8 @@ bool Driver::updateRobotPose_()
     }
     else
     {
-        debugger::debugColorOutput("[Driver]/[robot_state_updated_] No robot pose",
-                                   "", 10, Y);
+        debugger::debugWarningOutput("[Driver]/[robot_state_updated_] "
+                "No robot pose", "", 10);
         status = false;
     }
     // debugger::debugOutput("[Driver]/[UpdateRobotPose] updated pose: ", 
@@ -2802,6 +2915,29 @@ bool Driver::getParameters_()
                           getNameOf(is_subgoal_threshold_), title_name, received_all);
     ros_utils::checkROSParam(nh_, "marker_lifetime", marker_lifetime_, 
                           getNameOf(marker_lifetime_), title_name, received_all);
+
+    // terrain info parameters
+    ros_utils::checkROSParam(nh_, "plane_params/delta_x", 
+            terrain_plane_params_.delta_x, 
+            getNameOf(terrain_plane_params_) + "." + 
+            getNameOf(terrain_plane_params_.delta_x), 
+            title_name, received_all);
+    ros_utils::checkROSParam(nh_, "plane_params/delta_y", 
+            terrain_plane_params_.delta_y, 
+            getNameOf(terrain_plane_params_) + "." + 
+            getNameOf(terrain_plane_params_.delta_y), 
+            title_name, received_all);
+    ros_utils::checkROSParam(nh_, "plane_params/num_planes", 
+            terrain_plane_params_.num_planes, 
+            getNameOf(terrain_plane_params_) + "." + 
+            getNameOf(terrain_plane_params_.num_planes), 
+            title_name, received_all);
+    ros_utils::checkROSParam(nh_, "plane_params/min_num_points_for_fitting", 
+            terrain_plane_params_.min_num_points_for_fitting, 
+            getNameOf(terrain_plane_params_) + "." + 
+            getNameOf(terrain_plane_params_.min_num_points_for_fitting), 
+            title_name, received_all);
+
 
 
     if (!received_all)

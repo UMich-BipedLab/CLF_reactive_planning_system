@@ -73,6 +73,8 @@
 
 #include "inekf_msgs/State.h"
 #include "planner_msgs/State.h"
+#include "rviz_visual_tools/rviz_visual_tools.h"
+
 
 
 // #include <stdio.h>
@@ -392,10 +394,16 @@ private:
     ros::Publisher rrt_path_pub_; // publish path from the rrt 
     ros::Publisher planner_path_pub_; // publish path from the planner
     ros::Publisher planner_command_pub_; // publish path from the planner
+    // ros::Publisher planner_terrain_pub_; // publish terrain_info from the planner
     ros::Publisher trajectory_pub_; // publish robot trajectory 
     ros::Publisher marker_pub_;
     ros::Publisher marker_array_pub_;
     double marker_lifetime_;
+
+
+    // rviz tool
+    rviz_visual_tools::RvizVisualToolsPtr visual_tools_;
+
 
     // ros::Publisher frontier_publisher_;
     // ros::Publisher side_walk_publisher_;
@@ -507,6 +515,8 @@ private:
     goal_searching_for_planner_t goal_searching_;
     goal_selection_for_robot_t goal_selection_;
     communication_t udp_info_;
+    terrain_plane_params_t terrain_plane_params_;
+
 
 
     int is_exploration_;

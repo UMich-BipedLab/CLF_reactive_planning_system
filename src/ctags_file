@@ -4,7 +4,7 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-BOOST_BIND_NO_PLACEHOLDERS	driver.cpp	4;"	d	file:
+BOOST_BIND_NO_PLACEHOLDERS	driver.cpp	33;"	d	file:
 CLFRRTStarPlanner	clf_rrt.cpp	/^    CLFRRTStarPlanner::CLFRRTStarPlanner($/;"	f	class:bipedlab::CLFRRTStarPlanner
 COST_FOR_UNKNOWN	main_pre.cc	29;"	d	file:
 COST_FOR_UNKNOWN	pre_src/main.cc	29;"	d	file:
@@ -17,13 +17,14 @@ Cost	cost_.cpp	/^Cost::Cost(const double& distance_cost) :$/;"	f	class:bipedlab:
 Cost	cost_.cpp	/^Cost::Cost(const double& distance_cost, const double& height_cost) :$/;"	f	class:bipedlab::Cost
 Cost	cost_.cpp	/^Cost::Cost(void) : distance_(0), height_(0) { };$/;"	f	class:bipedlab::Cost
 DEBUG_LEVEL	fake_robot_publisher.cpp	/^int DEBUG_LEVEL = 0;$/;"	v
-DEBUG_LEVEL	main.cpp	/^int DEBUG_LEVEL = 7; $/;"	v
+DEBUG_LEVEL	main.cpp	/^int DEBUG_LEVEL = 10; $/;"	v
 DEBUG_LEVEL	map_publisher.cpp	/^int DEBUG_LEVEL = 5;$/;"	v
 DEBUG_LEVEL	simple_test.cpp	/^int DEBUG_LEVEL = 3; $/;"	v
 DEBUG_LEVEL	static_robot_publisher.cpp	/^int DEBUG_LEVEL = 10;$/;"	v
 DEBUG_LEVEL	test_rrt.cpp	/^int DEBUG_LEVEL = 5; $/;"	v
+DEBUG_LEVEL	test_rviz_tool.cpp	/^int DEBUG_LEVEL = 3;$/;"	v
 DEBUG_LEVEL	test_udp.cpp	/^int DEBUG_LEVEL = 5; $/;"	v
-DEBUG_LEVEL	unit_test.cpp	/^int DEBUG_LEVEL = 3; $/;"	v
+DEBUG_LEVEL	unit_test.cpp	/^int DEBUG_LEVEL = 3;$/;"	v
 Driver	driver.cpp	/^Driver::Driver(ros::NodeHandle& nh):$/;"	f	class:bipedlab::Driver
 Dstar	pre_src/Dstar.cc	/^Dstar::Dstar(int maxSteps, double C1){$/;"	f	class:Dstar
 Dstar	pre_src/Dstar_.cc	/^Dstar::Dstar(int maxSteps, double C1){$/;"	f	class:Dstar
@@ -75,6 +76,8 @@ OmniLocalChart	omni_local_chart.cpp	/^OmniLocalChart::OmniLocalChart(void)$/;"	f
 PORT	main_pre.cc	27;"	d	file:
 PORT	pre_src/main.cc	27;"	d	file:
 PORT	pre_src/main_2019.cc	38;"	d	file:
+RvizVisualToolsDemo	test_rviz_tool.cpp	/^        RvizVisualToolsDemo() : name_("rviz_demo") $/;"	f	class:rviz_visual_tools::RvizVisualToolsDemo
+RvizVisualToolsDemo	test_rviz_tool.cpp	/^class RvizVisualToolsDemo$/;"	c	namespace:rviz_visual_tools	file:
 SamplePose	sample_pose.cpp	/^SamplePose::SamplePose($/;"	f	class:bipedlab::SamplePose
 TOLERANCE	lie_group.cpp	/^const double TOLERANCE = 1e-8;$/;"	m	namespace:bipedlab::lie_group	file:
 UNKNOWN	pre_src/wavefront_frontier_detection.cc	/^static int UNKNOWN = -1;$/;"	v	file:
@@ -91,11 +94,15 @@ assignInfoReducedWithInEKFMsg	control_commands.cpp	/^planner_info_to_controller_
 assignNewTargetPose	local_chart.cpp	/^void LocalChart::assignNewTargetPose(const pose_t& new_target_pose)$/;"	f	class:bipedlab::LocalChart
 assignNewTargetPose	lyapunov_distance.cpp	/^void LyapunovDistance::assignNewTargetPose(const pose_t& new_target_pose)$/;"	f	class:bipedlab::LyapunovDistance
 assignNewTargetPosition	omni_local_chart.cpp	/^void OmniLocalChart::assignNewTargetPosition(const position_t& new_target_position)$/;"	f	class:bipedlab::OmniLocalChart
+assignObstacles	map_operation.cpp	/^void assignObstacles(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 assignRobotPoseXYZRPH	fake_robot.cpp	/^void FakeRobot::assignRobotPoseXYZRPH(double x, double y, double z,$/;"	f	class:bipedlab::FakeRobot
 assignRotateInPlaceWithInEKFMsg	control_commands.cpp	/^assignRotateInPlaceWithInEKFMsg($/;"	f	namespace:bipedlab::control_commands
+assignUnknownBehindObstacles	map_operation.cpp	/^void assignUnknownBehindObstacles(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 assignWalkInPlace	control_commands.cpp	/^assignWalkInPlace()$/;"	f	namespace:bipedlab::control_commands
 assignWalkInPlaceWithInEKFMsg	control_commands.cpp	/^assignWalkInPlaceWithInEKFMsg(const inekf_msgs::State& inekf_state)$/;"	f	namespace:bipedlab::control_commands
 averageMapFiltering	map_operation.cpp	/^void averageMapFiltering(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
+averageMapFilteringAndcomputeTerrainPlaneInformation	map_operation.cpp	/^averageMapFilteringAndcomputeTerrainPlaneInformation(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
+averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation	map_operation.cpp	/^averageMapFilteringAndcomputeTerrainPlaneInformationAndTerrainInformation(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 averageNANFiltering	map_operation.cpp	/^void averageNANFiltering(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 bipedlab	cassie_rrt_tree.cpp	/^namespace bipedlab$/;"	n	file:
 bipedlab	clf_rrt.cpp	/^namespace bipedlab $/;"	n	file:
@@ -121,13 +128,15 @@ bipedlab	standalone_local_chart.cpp	/^namespace bipedlab$/;"	n	file:
 bipedlab	standalone_lyapunov_distance.cpp	/^namespace bipedlab$/;"	n	file:
 bipedlab	standalone_omni_local_chart.cpp	/^namespace bipedlab$/;"	n	file:
 bipedlab	standalone_omni_lyapunov_distance.cpp	/^namespace bipedlab$/;"	n	file:
+bipedlab	utils/plane.cpp	/^namespace bipedlab$/;"	n	file:
 bipedlab	utils/plotting.cpp	/^namespace bipedlab$/;"	n	file:
 calculateKey	pre_src/Dstar.cc	/^state Dstar::calculateKey(state u) {$/;"	f	class:Dstar
 calculateKey	pre_src/Dstar_.cc	/^state Dstar::calculateKey(state u) {$/;"	f	class:Dstar
 changeOfControlVariables	standalone_omni_lyapunov_distance.cpp	/^changeOfControlVariables(const double r, const double delta, $/;"	f	namespace:bipedlab
 checkNAN	map_operation.cpp	/^size_t checkNAN(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
-checkOccupiedWithRadius	sample_pose.cpp	/^bool SamplePose::checkOccupiedWithRadius(const pose_t& pose, const double radius)$/;"	f	class:bipedlab::SamplePose
+checkOccupiedWithRadius	sample_pose.cpp	/^bool SamplePose::checkOccupiedWithRadius(const pose_t& pose, const double radius) const$/;"	f	class:bipedlab::SamplePose
 checkOutsideFovReturnModifiedDelta	standalone_omni_lyapunov_distance.cpp	/^checkOutsideFovReturnModifiedDelta(const double delta, const double beta)$/;"	f	namespace:bipedlab
+checkWhetherAnyGoalLeftForExecutionThread_	driver.cpp	/^Driver::checkWhetherAnyGoalLeftForExecutionThread_(double throttle_time,$/;"	f	class:bipedlab::Driver
 children	main_pre.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
 children	pre_src/main.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
 children	pre_src/main_2019.cc	/^        std::vector<Node> children;$/;"	m	struct:Node	file:
@@ -136,6 +145,7 @@ chooseRRTParentWithMapInfo_	clf_rrt.cpp	/^        CLFRRTStarPlanner::chooseRRTPa
 chooseRRTParent_	clf_rrt.cpp	/^        CLFRRTStarPlanner::chooseRRTParent_($/;"	f	class:bipedlab::CLFRRTStarPlanner
 close	pre_src/Dstar.cc	/^bool Dstar::close(double x, double y) {$/;"	f	class:Dstar
 close	pre_src/Dstar_.cc	/^bool Dstar::close(double x, double y) {$/;"	f	class:Dstar
+cluterViaHierarchicalAlgorithm	driver.cpp	/^void Driver::cluterViaHierarchicalAlgorithm($/;"	f	class:bipedlab::Driver
 compound	pose.cpp	/^pose2d_t pose2d_t::compound(const pose2d_t& origin) const$/;"	f	class:bipedlab::pose2d_t
 compound	pose_distribution.cpp	/^pose_distribution_t pose_distribution_t::compound(const pose_distribution_t& origin) const$/;"	f	class:bipedlab::pose_distribution_t
 computeAdjointSEK3	lie_group.cpp	/^Eigen::MatrixXd computeAdjointSEK3(const Eigen::MatrixXd& X) {$/;"	f	namespace:bipedlab::lie_group
@@ -162,6 +172,7 @@ computeRRTCostFromPoseToNode	clf_rrt.cpp	/^    cost_t CLFRRTStarPlanner::compute
 computeRobotVelocityFromTF	driver.cpp	/^void Driver::computeRobotVelocityFromTF()$/;"	f	class:bipedlab::Driver
 computeShortestPath	pre_src/Dstar.cc	/^int Dstar::computeShortestPath() {$/;"	f	class:Dstar
 computeShortestPath	pre_src/Dstar_.cc	/^int Dstar::computeShortestPath() {$/;"	f	class:Dstar
+computeSignedDistnaceField	map_operation.cpp	/^void computeSignedDistnaceField(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 computeSkew	lie_group.cpp	/^Eigen::Matrix3d computeSkew(const Eigen::Vector3d& v) {$/;"	f	namespace:bipedlab::lie_group
 computeSlopeWRTRobotPose	map_operation.cpp	/^void computeSlopeWRTRobotPose(grid_map::GridMap& map, $/;"	f	namespace:bipedlab::map_operation
 computeUnskew	lie_group.cpp	/^Eigen::Vector3d computeUnskew(const Eigen::Matrix3d& m)$/;"	f	namespace:bipedlab::lie_group
@@ -171,6 +182,7 @@ convertPose2rd	standalone_omni_local_chart.cpp	/^convertPose2rd(const pose_t& st
 convertPose2rdFoV	omni_local_chart.cpp	/^OmniLocalChart::convertPose2rdFoV(const pose_t& start_pose, const double beta) const$/;"	f	class:bipedlab::OmniLocalChart
 convertPose2rdFoVGivenTargetNoAssign	omni_local_chart.cpp	/^OmniLocalChart::convertPose2rdFoVGivenTargetNoAssign($/;"	f	class:bipedlab::OmniLocalChart
 convertToPlannerMsg	control_commands.cpp	/^convertToPlannerMsg(const planner_info_to_controller_t& data, $/;"	f	namespace:bipedlab::control_commands
+convertToPlannerMsgWithPlane	control_commands.cpp	/^convertToPlannerMsgWithPlane(const planner_info_to_controller_t& data, $/;"	f	namespace:bipedlab::control_commands
 convertToRobotCommunicationTypeReduced_	communication.cpp	/^Communication::convertToRobotCommunicationTypeReduced_($/;"	f	class:bipedlab::Communication
 cost	pre_src/Dstar.cc	/^double Dstar::cost(state a, state b) {$/;"	f	class:Dstar
 cost	pre_src/Dstar_.cc	/^double Dstar::cost(state a, state b) {$/;"	f	class:Dstar
@@ -198,7 +210,8 @@ driveRobot_	driver.cpp	/^int Driver::driveRobot_()$/;"	f	class:bipedlab::Driver
 eightCondist	pre_src/Dstar.cc	/^double Dstar::eightCondist(state a, state b) {$/;"	f	class:Dstar
 eightCondist	pre_src/Dstar_.cc	/^double Dstar::eightCondist(state a, state b) {$/;"	f	class:Dstar
 estimateRobotMotion	fake_robot.cpp	/^void FakeRobot::estimateRobotMotion()$/;"	f	class:bipedlab::FakeRobot
-examinePathStatus	driver.cpp	/^int Driver::examinePathStatus(const double& throttle_time)$/;"	f	class:bipedlab::Driver
+examinePathStatusForExecutionThread_	driver.cpp	/^int Driver::examinePathStatusForExecutionThread_(const double& throttle_time)$/;"	f	class:bipedlab::Driver
+executeReactivePlanner_	driver.cpp	/^void Driver::executeReactivePlanner_(double throttle_time,$/;"	f	class:bipedlab::Driver
 extend	lyapunov_path.cpp	/^path_segment_t LyapunovPath::extend(const pose_t& robot_pose,$/;"	f	class:bipedlab::LyapunovPath
 extendFromTreeNodeToSampledPose_	clf_rrt.cpp	/^    path_segment_t CLFRRTStarPlanner::extendFromTreeNodeToSampledPose_($/;"	f	class:bipedlab::CLFRRTStarPlanner
 extendUsingDifferentialDrivenModel_	lyapunov_path.cpp	/^path_segment_t LyapunovPath::extendUsingDifferentialDrivenModel_($/;"	f	class:bipedlab::LyapunovPath
@@ -213,8 +226,9 @@ findNearbyNodesToPose_	clf_rrt.cpp	/^        CLFRRTStarPlanner::findNearbyNodesT
 findNearestNodeToPose	cassie_rrt_tree.cpp	/^CassieRRTTree::findNearestNodeToPose(const pose_t& pose, $/;"	f	class:bipedlab::CassieRRTTree
 findNearestNodeToPose_	clf_rrt.cpp	/^    cassie_rrt_node_t* CLFRRTStarPlanner::findNearestNodeToPose_($/;"	f	class:bipedlab::CLFRRTStarPlanner
 findNewPath	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::findNewPath($/;"	f	class:bipedlab::CLFRRTStarPlanner
-findNextGoalForRobot_	driver.cpp	/^Driver::findNextGoalForRobot_(const robot_state_t& robot_state, $/;"	f	class:bipedlab::Driver
+findNextGoalForExecutionThread_	driver.cpp	/^Driver::findNextGoalForExecutionThread_(double throttle_time,$/;"	f	class:bipedlab::Driver
 findPathFromSampledNodeToPose	clf_rrt.cpp	/^    path_segment_t CLFRRTStarPlanner::findPathFromSampledNodeToPose($/;"	f	class:bipedlab::CLFRRTStarPlanner
+fitPlaneViaLeastSquares2	utils/plane.cpp	/^    int plane_t::fitPlaneViaLeastSquares2(const Eigen::MatrixXf &points)$/;"	f	class:bipedlab::plane::plane_t
 genSolidBox	fake_map.cpp	/^    void FakeMap::genSolidBox(double anchor_x, double anchor_y, $/;"	f	class:bipedlab::FakeMap
 genTerrain	fake_map.cpp	/^    void FakeMap::genTerrain(double mean_x, double mean_y, $/;"	f	class:bipedlab::FakeMap
 getClickPointCallBack_	driver.cpp	/^void Driver::getClickPointCallBack_($/;"	f	class:bipedlab::Driver
@@ -262,6 +276,7 @@ insertNode	cassie_rrt_tree.cpp	/^cassie_rrt_node_t* CassieRRTTree::insertNode(co
 insertRRTNode_	clf_rrt.cpp	/^        CLFRRTStarPlanner::insertRRTNode_(cassie_rrt_node_t* parent_node,$/;"	f	class:bipedlab::CLFRRTStarPlanner
 interpolate_pose	pose.cpp	/^pose2d_t interpolate_pose(const pose2d_t& priorPose, const pose2d_t& currentPose, int64_t desiredPoseTime)$/;"	f	namespace:bipedlab
 isNeighborObstacleFree	local_map.cpp	/^bool LocalMap::isNeighborObstacleFree($/;"	f	class:bipedlab::LocalMap
+isNeighborObstacleFree	map_cost.cpp	/^bool MapCost::isNeighborObstacleFree(const pose_t& pose, const double& radius) const$/;"	f	class:bipedlab::MapCost
 isObstacleFree	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::isObstacleFree(const std::vector<pose_t>& steps) const$/;"	f	class:bipedlab::CLFRRTStarPlanner
 isValid	pre_src/Dstar.cc	/^bool Dstar::isValid(state u) {$/;"	f	class:Dstar
 isValid	pre_src/Dstar_.cc	/^bool Dstar::isValid(state u) {$/;"	f	class:Dstar
@@ -281,10 +296,14 @@ loadLevelTwoWaveField_	fake_map.cpp	/^    void FakeMap::loadLevelTwoWaveField_()
 loadNoisyLevelOneWaveField_	fake_map.cpp	/^    void FakeMap::loadNoisyLevelOneWaveField_() $/;"	f	class:bipedlab::FakeMap
 loadNoisyLevelThreeWaveField_	fake_map.cpp	/^    void FakeMap::loadNoisyLevelThreeWaveField_() $/;"	f	class:bipedlab::FakeMap
 loadNoisyLevelTwoWaveField_	fake_map.cpp	/^    void FakeMap::loadNoisyLevelTwoWaveField_() $/;"	f	class:bipedlab::FakeMap
+loadNoisyRetancularIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadNoisyRetancularIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
 loadNoisySimpleClutterIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadNoisySimpleClutterIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
+loadNoisySimpleClutterIndoorScene2_	fake_map.cpp	/^    void FakeMap::loadNoisySimpleClutterIndoorScene2_()$/;"	f	class:bipedlab::FakeMap
 loadNoisySimpleCorridorIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadNoisySimpleCorridorIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
 loadNoisySimpleCorridorIndoorScene2_	fake_map.cpp	/^    void FakeMap::loadNoisySimpleCorridorIndoorScene2_()$/;"	f	class:bipedlab::FakeMap
+loadRetancularIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadRetancularIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
 loadSimpleClutterIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadSimpleClutterIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
+loadSimpleClutterIndoorScene2_	fake_map.cpp	/^    void FakeMap::loadSimpleClutterIndoorScene2_()$/;"	f	class:bipedlab::FakeMap
 loadSimpleCorridorIndoorScene1_	fake_map.cpp	/^    void FakeMap::loadSimpleCorridorIndoorScene1_()$/;"	f	class:bipedlab::FakeMap
 loadSimpleCorridorIndoorScene2_	fake_map.cpp	/^    void FakeMap::loadSimpleCorridorIndoorScene2_()$/;"	f	class:bipedlab::FakeMap
 loadTestMap1_	fake_map.cpp	/^    void FakeMap::loadTestMap1_() $/;"	f	class:bipedlab::FakeMap
@@ -302,12 +321,15 @@ main	pre_src/main_2019.cc	/^int main(int argc, char **argv) {$/;"	f
 main	simple_test.cpp	/^int main(int argc, char *argv[]) {$/;"	f
 main	static_robot_publisher.cpp	/^int main(int argc, char** argv)$/;"	f
 main	test_rrt.cpp	/^int main(int argc, char *argv[]) {$/;"	f
+main	test_rviz_tool.cpp	/^int main(int argc, char** argv)$/;"	f
 main	test_udp.cpp	/^int main(int argc, char *argv[]) {$/;"	f
 main	unit_test.cpp	/^int main(int argc, char *argv[]) {$/;"	f
 makeNewCell	pre_src/Dstar.cc	/^void Dstar::makeNewCell(state u) {$/;"	f	class:Dstar
 makeNewCell	pre_src/Dstar_.cc	/^void Dstar::makeNewCell(state u) {$/;"	f	class:Dstar
 map_operation	map_operation.cpp	/^namespace map_operation$/;"	n	namespace:bipedlab	file:
 moveRobot	utils/plotting.cpp	/^bool moveRobot(ros::Publisher marker_pub,$/;"	f	namespace:bipedlab::plotting
+name_	test_rviz_tool.cpp	/^        std::string name_;$/;"	m	class:rviz_visual_tools::RvizVisualToolsDemo	file:
+nh_	test_rviz_tool.cpp	/^        ros::NodeHandle nh_;$/;"	m	class:rviz_visual_tools::RvizVisualToolsDemo	file:
 nonholonomic_distance	standalone_lyapunov_distance.cpp	/^double nonholonomic_distance(double r,$/;"	f	namespace:bipedlab
 occupied	pre_src/Dstar.cc	/^bool Dstar::occupied(state u) {$/;"	f	class:Dstar
 occupied	pre_src/Dstar_.cc	/^bool Dstar::occupied(state u) {$/;"	f	class:Dstar
@@ -334,7 +356,9 @@ pack_waypoint_data_t	waypoint_data_t_new.c	/^void pack_waypoint_data_t(const way
 parentId	main_pre.cc	/^        int parentId;$/;"	m	struct:Node	file:
 parentId	pre_src/main.cc	/^        int parentId;$/;"	m	struct:Node	file:
 parentId	pre_src/main_2019.cc	/^        int parentId;$/;"	m	struct:Node	file:
+pickGoalSegment	driver.cpp	/^void Driver::pickGoalSegment($/;"	f	class:bipedlab::Driver
 planPathFromRRT	driver.cpp	/^void Driver::planPathFromRRT(const bool& if_global_map_updated, $/;"	f	class:bipedlab::Driver
+plane	utils/plane.cpp	/^namespace plane $/;"	n	namespace:bipedlab	file:
 plotting	utils/plotting.cpp	/^namespace plotting $/;"	n	namespace:bipedlab	file:
 point	main_pre.cc	/^        geometry_msgs::Point point;$/;"	m	struct:Node	file:
 point	pre_src/main.cc	/^        geometry_msgs::Point point;$/;"	m	struct:Node	file:
@@ -351,9 +375,11 @@ printResultsFromRRT	driver.cpp	/^void Driver::printResultsFromRRT(const bool& im
 printStatus	clf_rrt.cpp	/^    void CLFRRTStarPlanner::printStatus(int level, std::string text)$/;"	f	class:bipedlab::CLFRRTStarPlanner
 probability	multivariate_gaussian.cpp	/^double MultivariateGaussian::probability(const Eigen::VectorXd& vector) const$/;"	f	class:bipedlab::MultivariateGaussian
 propagateRRTCostToChildren	clf_rrt.cpp	/^    void CLFRRTStarPlanner::propagateRRTCostToChildren($/;"	f	class:bipedlab::CLFRRTStarPlanner
+pruneClustersAndCollectInformation	driver.cpp	/^void Driver::pruneClustersAndCollectInformation($/;"	f	class:bipedlab::Driver
 publishCurrentPose_	fake_robot.cpp	/^void FakeRobot::publishCurrentPose_()$/;"	f	class:bipedlab::FakeRobot
 publishDebug_	clf_rrt.cpp	/^    void CLFRRTStarPlanner::publishDebug_()$/;"	f	class:bipedlab::CLFRRTStarPlanner
 publishInfoToRobot_	driver.cpp	/^void Driver::publishInfoToRobot_()$/;"	f	class:bipedlab::Driver
+publishLabelHelper	test_rviz_tool.cpp	/^        void publishLabelHelper(const Eigen::Isometry3d& pose, const std::string& label)$/;"	f	class:rviz_visual_tools::RvizVisualToolsDemo
 publishToRobotFromInEKFStateMsg	communication.cpp	/^bool Communication::publishToRobotFromInEKFStateMsg($/;"	f	class:bipedlab::Communication
 publishToRobotFromTFMsg	communication.cpp	/^bool Communication::publishToRobotFromTFMsg(const tf::StampedTransform& robot_pose, $/;"	f	class:bipedlab::Communication
 publishToRobotGivenInfoToRobotType	communication.cpp	/^bool Communication::publishToRobotGivenInfoToRobotType(const planner_info_to_controller_t& info)$/;"	f	class:bipedlab::Communication
@@ -384,6 +410,7 @@ rpd2target	local_chart.cpp	/^pose_t LocalChart::rpd2target($/;"	f	class:bipedlab
 rpd2target	standalone_local_chart.cpp	/^pose_t rpd2target(const egocentric_polar_coords_t& coords, const pose_t& robotPose) $/;"	f	namespace:bipedlab::local_chart
 rpd2target	standalone_local_chart.cpp	/^pose_t rpd2target(double r, double phi, double delta, const pose_t& robotPose) $/;"	f	namespace:bipedlab::local_chart
 runCLFRRTAlgorithm	clf_rrt.cpp	/^    bool CLFRRTStarPlanner::runCLFRRTAlgorithm($/;"	f	class:bipedlab::CLFRRTStarPlanner
+rviz_visual_tools	test_rviz_tool.cpp	/^namespace rviz_visual_tools$/;"	n	file:
 sample	multivariate_gaussian.cpp	/^Eigen::VectorXd MultivariateGaussian::sample(void) const$/;"	f	class:bipedlab::MultivariateGaussian
 sampleGoalOnBoundary_	sample_pose.cpp	/^void SamplePose::sampleGoalOnBoundary_(pose_t& sampled_pose) $/;"	f	class:bipedlab::SamplePose
 samplePose_	clf_rrt.cpp	/^    pose_t CLFRRTStarPlanner::samplePose_(bool& is_goal)$/;"	f	class:bipedlab::CLFRRTStarPlanner
@@ -410,6 +437,7 @@ stabilizeOmniControl	lyapunov_distance.cpp	/^LyapunovDistance::stabilizeOmniCont
 stabilizing_delta_star	standalone_lyapunov_distance.cpp	/^double stabilizing_delta_star(double r,$/;"	f	namespace:bipedlab
 steer	lyapunov_path.cpp	/^path_segment_t LyapunovPath::steer(const pose_t& robot_pose, $/;"	f	class:bipedlab::LyapunovPath
 steerAway	lyapunov_path.cpp	/^LyapunovPath::steerAway(const point2d_t<float>& point, double max_extension) const$/;"	f	class:bipedlab::LyapunovPath
+testRows	test_rviz_tool.cpp	/^        void testRows(double& x_location)$/;"	f	class:rviz_visual_tools::RvizVisualToolsDemo
 transformToNewFrame	pose.cpp	/^pose2d_t pose2d_t::transformToNewFrame(const pose2d_t& newFrame) const$/;"	f	class:bipedlab::pose2d_t
 trueDist	pre_src/Dstar.cc	/^double Dstar::trueDist(state a, state b) {$/;"	f	class:Dstar
 trueDist	pre_src/Dstar_.cc	/^double Dstar::trueDist(state a, state b) {$/;"	f	class:Dstar
@@ -438,6 +466,7 @@ updateStart	pre_src/Dstar.cc	/^void Dstar::updateStart(int x, int y) {$/;"	f	cla
 updateStart	pre_src/Dstar_.cc	/^void Dstar::updateStart(double x, double y) {$/;"	f	class:Dstar
 updateVertex	pre_src/Dstar.cc	/^void Dstar::updateVertex(state u) {$/;"	f	class:Dstar
 updateVertex	pre_src/Dstar_.cc	/^void Dstar::updateVertex(state u) {$/;"	f	class:Dstar
+visual_tools_	test_rviz_tool.cpp	/^        rvt::RvizVisualToolsPtr visual_tools_;$/;"	m	class:rviz_visual_tools::RvizVisualToolsDemo	file:
 waitForData_	driver.cpp	/^void Driver::waitForData_() {$/;"	f	class:bipedlab::Driver
 wfd	pre_src/wavefront_frontier_detection.cc	/^vector<vector<int> > wfd(const nav_msgs::OccupancyGrid& map, $/;"	f
 ~CLFRRTStarPlanner	clf_rrt.cpp	/^    CLFRRTStarPlanner::~CLFRRTStarPlanner() { }$/;"	f	class:bipedlab::CLFRRTStarPlanner

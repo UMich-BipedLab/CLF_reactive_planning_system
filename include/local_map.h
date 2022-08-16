@@ -34,9 +34,13 @@
 #include <grid_map_ros/grid_map_ros.hpp>
 #include <grid_map_msgs/GridMap.h>
 #include <eigen3/Eigen/Dense> 
+#include "boost/thread/mutex.hpp"
+#include "boost/thread.hpp"
+
 
 #include "pose.h"
 #include "robot_state.h"
+#include "utils/plane.h"
 #include "cost_params_t.h"
 #include "utils/debugger.h"
 
@@ -66,6 +70,18 @@ typedef struct local_map_info
         mode(mode), obstacle_threshold(obstacle_threshold), length(length) { }
 } local_map_params_t;
     
+
+typedef struct terrain_plane_params
+{
+    double delta_x;
+    double delta_y;
+    int num_planes;
+    int min_num_points_for_fitting; // minimum number of point for plane fitting
+    terrain_plane_params(void): delta_x(0.3), delta_y(0.3), 
+        num_planes(5), min_num_points_for_fitting(3) { }
+} terrain_plane_params_t;
+
+
 class LocalMap
 {
 private:
@@ -73,12 +89,22 @@ private:
     const grid_map::GridMap* map_;
     const pose_t* current_pose_;
     local_map_params_t local_map_info_;
+    terrain_plane_params_t terrain_plane_params_;
+    std::shared_ptr<std::vector<plane::terrain_info_t>> terrain_ptr_;
+    boost::mutex terrain_lock_;
+
+
     
 
 public:
     LocalMap(const pose_t* current_pose, 
              const grid_map::GridMap* map, 
-             const local_map_params_t& local_map_info_);
+             const local_map_params_t& local_map_info,
+             const terrain_plane_params_t& terrain_plane_params);
+
+    LocalMap(const pose_t* current_pose, 
+             const grid_map::GridMap* map, 
+             const local_map_params_t& local_map_info);
 
     bool isNeighborObstacleFree(
             const double& x, const double& y, const double& radius = 0.1) const;
@@ -86,6 +112,28 @@ public:
 
     void updateLocalMap(const pose_t& current_pose);
     void printMapAddress(void) { debugger::debugOutput("[In LocalMap()] &(global_map_ in Planner == map_): ", map_, 5);};
+
+
+    void lockTerrainThread(bool status) // true is lock, false is unlock.
+    {
+        if (status)
+            terrain_lock_.lock();
+        else
+            terrain_lock_.unlock();
+    }
+    // void lockTerrainThread(bool status) // true is lock, false is unlock.
+    // {
+    //     // boost::mutex::scoped_lock guard(terrain_lock);
+
+    //        boost::lock_guard<boost::mutex> guard(terrain_lock);
+    //         // boost::unique_lock<boost::mutex> ownlock(terrain_lock);
+    //         // ownlock.unlock();
+    //         //
+    //         // terrain_lock.unlock();
+    // }
+    std::shared_ptr<std::vector<plane::terrain_info_t>> getTerrainInfo(void) const { return terrain_ptr_; };
+    std::vector<plane::terrain_info_t> terrain_info;
+
 
     grid_map::GridMap local_map;
     // grid_map::GridMap* local_map_ptr;
